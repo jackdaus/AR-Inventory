@@ -99,12 +99,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.9" />
-    <PackageReference Include="StereoKit" Version="0.3.6" />
+    <PackageReference Include="StereoKit" Version="0.3.7-preview.4" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\StereoKitApp.csproj">
+    <ProjectReference Include="..\..\AR-Inventory.csproj">
       <Project>{9a9b3dd2-9925-4e07-9857-513501540739}</Project>
-      <Name>StereoKitApp</Name>
+      <Name>AR-Inventory</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '16.0' ">

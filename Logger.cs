@@ -5,9 +5,9 @@ using System.Text;
 using StereoKit;
 using StereoKit.Framework;
 
-namespace AR_Inventory
+namespace ARInventory
 {
-    internal class Logger : IStepper
+    public class Logger : IStepper
     {
         public bool Enabled { get; set; }
 

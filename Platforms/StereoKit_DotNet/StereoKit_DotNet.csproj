@@ -10,7 +10,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\AR-Inventory.csproj" />
+		<ProjectReference Include="..\..\ARInventory.csproj" />
 	</ItemGroup>
 
 	<!-- Copy assets, and build the app's shaders into the final app folder -->

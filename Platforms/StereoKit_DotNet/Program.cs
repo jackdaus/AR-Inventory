@@ -1,6 +1,6 @@
 ﻿using System;
 using StereoKit;
-using StereoKitApp;
+using ARInventory;
 
 class SKLoader
 {

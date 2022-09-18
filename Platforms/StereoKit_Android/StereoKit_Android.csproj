@@ -116,9 +116,9 @@
     <PackageReference Include="Xamarin.Essentials" Version="1.5.3.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\AR-Inventory.csproj">
+    <ProjectReference Include="..\..\ARInventory.csproj">
       <Project>{9a9b3dd2-9925-4e07-9857-513501540739}</Project>
-      <Name>AR-Inventory</Name>
+      <Name>ARInventory</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

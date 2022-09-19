@@ -7,6 +7,8 @@ using System.Text;
 using StereoKit;
 using Newtonsoft.Json;
 using System.IO;
+using System.Numerics;
+using ARInventory.Entities.JsonConverters;
 
 namespace ARInventory.Entities
 {
@@ -20,6 +22,7 @@ namespace ARInventory.Entities
         public EntitySet<ItemType> ItemTypes => _entities.ItemTypes;
 
         private readonly EntityBacking _entities;
+        private readonly JsonConverter[] _jsonConverters = { new Vec3Converter() };
         private readonly string FILE_NAME = "db.json";
 
         public EntityContext()
@@ -34,7 +37,7 @@ namespace ARInventory.Entities
         /// <returns>True on success, False on failure</returns>
         public bool SaveChanges()
         {
-            var json = JsonConvert.SerializeObject(_entities, Formatting.Indented);
+            var json = JsonConvert.SerializeObject(_entities, Formatting.Indented, _jsonConverters);
             var isSuccessful = Platform.WriteFile(FILE_NAME, json);
             return isSuccessful;
         }
@@ -49,5 +52,4 @@ namespace ARInventory.Entities
             public readonly EntitySet<ItemType> ItemTypes = new EntitySet<ItemType>();
         }
     }
-
 }

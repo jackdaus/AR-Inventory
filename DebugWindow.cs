@@ -55,7 +55,7 @@ namespace ARInventory
             App.Context.Items.Add(new Entities.Models.Item
             {
                 Id = Guid.NewGuid(),
-                //Location = Vec3.Zero,
+                Location = new Vec3(1, 2, 3),
                 Title = "Towels",
                 Quantity = 1
             });

@@ -1,6 +1,7 @@
 ﻿using ARInventory.Entities;
 using StereoKit;
 using System;
+using System.Linq;
 
 namespace ARInventory
 {
@@ -61,6 +62,24 @@ namespace ARInventory
                 Id = Guid.NewGuid(),
                 //Location = null,
                 Title = "Can opener",
+                Quantity = 1
+            });
+
+            var tempId = Guid.NewGuid();
+
+            App.Context.Items.Add(new Entities.Models.Item
+            {
+                Id = tempId,
+                //Location = null,
+                Title = "e1",
+                Quantity = 1
+            });
+
+            App.Context.Items.Add(new Entities.Models.Item
+            {
+                //Id = tempId,
+                //Location = null,
+                Title = "e2",
                 Quantity = 1
             });
 

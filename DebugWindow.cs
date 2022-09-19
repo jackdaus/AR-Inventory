@@ -60,14 +60,6 @@ namespace ARInventory
                 Quantity = 1
             });
 
-            App.Context.Items.Add(new Entities.Models.Item
-            {
-                Id = Guid.NewGuid(),
-                //Location = null,
-                Title = "Salt",
-                Quantity = 1
-            });
-
             App.Context.SaveChanges();
         }
     }

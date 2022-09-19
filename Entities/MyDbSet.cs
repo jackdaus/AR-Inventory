@@ -1,6 +1,9 @@
 ﻿using ARInventory.Entities.Interfaces;
+using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -10,13 +13,20 @@ namespace ARInventory.Entities
     /// A set of entities accessible by the context.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class MyDbSet<T> where T : IGotId
+    /// 
+    /// Implementation note: We are using the ICollection interface for JSON serialization
+    public class MyDbSet<T> : ICollection<T> where T : IGotId
     {
-        public readonly List<T> _entities = new List<T>();
+        private readonly List<T> _entities = new List<T>();
 
         public void Add(T entity)
         {
-            // TODO check to make sure GUID is unique, or init GUID if none
+            if (Contains(entity))
+                throw new InvalidOperationException($"Cannot add entity {typeof(T).Name} to {typeof(MyDbSet<T>).Name}. Duplicate Id {entity.Id}");
+
+            if (entity.Id == Guid.Empty)
+                entity.Id = Guid.NewGuid();
+
             _entities.Add(entity);
         }
 
@@ -41,10 +51,37 @@ namespace ARInventory.Entities
             return true;
         }
 
-        // TODO? might be nice API to have the MyDbSet class already be a list, instead of needing to use this method...
-        public List<T> ToList()
+        #region ICollection stuff
+
+        public int Count => _entities.Count();
+
+        public bool IsReadOnly => false;
+
+        public void Clear()
         {
-            return _entities.ToList();
+            _entities.Clear();
         }
+
+        public bool Contains(T entity)
+        {
+            return _entities.Any(ent => ent.Id == entity.Id);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            _entities.CopyTo(array, arrayIndex);
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _entities.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _entities.GetEnumerator();
+        }
+
+        #endregion
     }
 }

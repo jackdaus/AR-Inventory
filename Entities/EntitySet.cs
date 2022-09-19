@@ -15,14 +15,14 @@ namespace ARInventory.Entities
     /// <typeparam name="T"></typeparam>
     /// 
     /// Implementation note: We are using the ICollection interface for JSON serialization
-    public class MyDbSet<T> : ICollection<T> where T : IGotId
+    public class EntitySet<T> : ICollection<T> where T : IGotId
     {
         private readonly List<T> _entities = new List<T>();
 
         public void Add(T entity)
         {
             if (Contains(entity))
-                throw new InvalidOperationException($"Cannot add entity {typeof(T).Name} to {typeof(MyDbSet<T>).Name}. Duplicate Id {entity.Id}");
+                throw new InvalidOperationException($"Cannot add entity {typeof(T).Name} to {typeof(EntitySet<T>).Name}. Duplicate Id {entity.Id}");
 
             if (entity.Id == Guid.Empty)
                 entity.Id = Guid.NewGuid();

@@ -34,10 +34,8 @@ namespace ARInventory
 
 			SK.AddStepper<Logger>();
 			SK.AddStepper<DebugWindow>();
-
-			testContext();
         }
-
+		
 		public void Step()
 		{
 			if (SK.System.displayType == Display.Opaque)
@@ -45,45 +43,6 @@ namespace ARInventory
 
 			UI.Handle("Cube", ref cubePose, cube.Bounds);
 			cube.Draw(cubePose.ToMatrix());
-        }
-
-        private void testContext()
-        {
-            App.Context.Items.Add(new Entities.Models.Item
-            {
-                Id = Guid.NewGuid(),
-                //Location = Vec3.Zero,
-                Title = "Paper towels",
-                Quantity = 1
-            });
-
-            App.Context.Items.Add(new Entities.Models.Item
-            {
-                Id = Guid.NewGuid(),
-                //Location = null,
-                Title = "Can opener",
-                Quantity = 1
-            });
-
-            var tempId = Guid.NewGuid();
-
-            App.Context.Items.Add(new Entities.Models.Item
-            {
-                Id = tempId,
-                //Location = null,
-                Title = "e1",
-                Quantity = 1
-            });
-
-            App.Context.Items.Add(new Entities.Models.Item
-            {
-                //Id = tempId,
-                //Location = null,
-                Title = "e2",
-                Quantity = 1
-            });
-
-            App.Context.SaveChanges();
         }
     }
 }

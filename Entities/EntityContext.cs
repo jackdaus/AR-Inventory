@@ -16,35 +16,38 @@ namespace ARInventory.Entities
     // TODO are there tread saftey concerns here? Do I need to implement a thread safe singelton pattern?
     public class EntityContext
     {
-        public readonly MyDbSet<Item> Items         = new MyDbSet<Item>();
-        public readonly MyDbSet<ItemType> ItemTypes = new MyDbSet<ItemType>();
+        public EntitySet<Item> Items => _entities.Items;
+        public EntitySet<ItemType> ItemTypes => _entities.ItemTypes;
 
+        private readonly EntityBacking _entities;
         private readonly string FILE_NAME = "db.json";
 
         public EntityContext()
         {
             var json = Platform.ReadFileText(FILE_NAME);
-            var entityContext = JsonConvert.DeserializeObject<EntityContext>(json) ?? new EntityContext(true);
-            this.Items = entityContext.Items;
-            this.ItemTypes = entityContext.ItemTypes;
+            _entities = JsonConvert.DeserializeObject<EntityBacking>(json) ?? new EntityBacking();
         }
 
-        // TODO redesign so we don't need to do this...
-        [JsonConstructor]
-        private EntityContext(bool dummy)
-        {
-        }
-
+        /// <summary>
+        /// Save the context to the file system
+        /// </summary>
+        /// <returns>True on success, False on failure</returns>
         public bool SaveChanges()
         {
-            var json = JsonConvert.SerializeObject(this, Formatting.Indented);
-            Log.Info(json);
-
-            //File.WriteAllText($"db-{ticks}-system.txt", json);
-            //return true;
-
+            var json = JsonConvert.SerializeObject(_entities, Formatting.Indented);
             var isSuccessful = Platform.WriteFile(FILE_NAME, json);
             return isSuccessful;
         }
+
+        /// <summary>
+        /// A private backing class so we don't have to serialize/deserialize the EntityContext directly.
+        /// That would lead to messy JSON serialization issues with the default constructor.
+        /// </summary>
+        private class EntityBacking
+        {
+            public readonly EntitySet<Item> Items         = new EntitySet<Item>();
+            public readonly EntitySet<ItemType> ItemTypes = new EntitySet<ItemType>();
+        }
     }
+
 }

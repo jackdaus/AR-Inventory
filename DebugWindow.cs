@@ -60,7 +60,8 @@ namespace ARInventory
                 Quantity = 1
             });
 
-            App.Context.SaveChanges();
+            var isSuccessful = App.Context.SaveChanges();
+            Log.Info($"Save was successful: {isSuccessful}");
         }
     }
 }

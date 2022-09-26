@@ -1,6 +1,8 @@
 ﻿using ARInventory.Entities;
+using ARInventory.Entities.Models;
 using StereoKit;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ARInventory
@@ -13,7 +15,7 @@ namespace ARInventory
 			displayPreference = DisplayMode.MixedReality
 		};
 
-		internal static EntityContext Context;
+		internal static EntityContext Context; // TODO make a singleton?
 
 		Pose  cubePose			= new Pose(0, 0, -0.5f, Quat.Identity);
 		Model cube;
@@ -34,6 +36,7 @@ namespace ARInventory
 
 			SK.AddStepper<Logger>();
 			SK.AddStepper<DebugWindow>();
+			SK.AddStepper<ManageInventory>();
         }
 		
 		public void Step()

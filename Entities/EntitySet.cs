@@ -19,6 +19,17 @@ namespace ARInventory.Entities
     {
         private readonly List<T> _entities = new List<T>();
 
+        /// <summary>
+        /// Gets the entity with the given id. If no entity is found with the id, then null is returned.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public T Find(Guid id)
+        {
+            return _entities.Find(x => x.Id == id);
+        }
+
         public void Add(T entity)
         {
             if (Contains(entity))

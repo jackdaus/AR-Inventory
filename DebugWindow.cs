@@ -3,6 +3,7 @@ using StereoKit;
 using StereoKit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace ARInventory
@@ -35,10 +36,14 @@ namespace ARInventory
             {
                 Platform.FilePicker(PickerMode.Open, logFileContents, null);
             }
-            if (UI.Button("Test Context"))
+
+            UI.Label("Context");
+            if (UI.Button("Test: Add Item to Context"))
             {
                 testContext();
             }
+            UI.Label("Factory");
+
             //if (UI.Button("Quit")) SK.Quit();
             UI.WindowEnd();
         }
@@ -55,7 +60,13 @@ namespace ARInventory
             App.Context.Items.Add(new Entities.Models.Item
             {
                 Id = Guid.NewGuid(),
-                Location = new Vec3(1, 2, 3),
+                LocationX = -(float)new Random().NextDouble(), 
+                LocationY = 0, 
+                LocationZ = -1,
+                OrientationX = 0, 
+                OrientationY = 0, 
+                OrientationZ = 0,
+                OrientationW = 1,
                 Title = "Towels",
                 Quantity = 1
             });
@@ -63,5 +74,6 @@ namespace ARInventory
             var isSuccessful = App.Context.SaveChanges();
             Log.Info($"Save was successful: {isSuccessful}");
         }
+
     }
 }

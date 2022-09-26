@@ -1,19 +1,20 @@
 ﻿using ARInventory.Entities.Interfaces;
-using StereoKit;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
-using Newtonsoft.Json;
 
 namespace ARInventory.Entities.Models
 {
     public class Item : IGotId
     {
         public Guid Id { get; set; }
-        public Vec3 Location { get; set; }
+        public float LocationX { get; set; }
+        public float LocationY { get; set; }
+        public float LocationZ { get; set; }
+        public float OrientationX { get; set; }
+        public float OrientationY { get; set; }
+        public float OrientationZ { get; set; }
+        public float OrientationW { get; set; }
         public string Title { get; set; }
         public int Quantity { get; set; }
-        public bool IsArchived { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using ARInventory.Entities.Models;
 using StereoKit;
 using Newtonsoft.Json;
+using System;
 
 namespace ARInventory.Entities
 {
@@ -18,8 +19,16 @@ namespace ARInventory.Entities
 
         public EntityContext()
         {
-            var json = Platform.ReadFileText(FILE_NAME);
-            _entities = JsonConvert.DeserializeObject<EntityBacking>(json) ?? new EntityBacking();
+            try
+            {
+                var json = Platform.ReadFileText(FILE_NAME);
+                _entities = JsonConvert.DeserializeObject<EntityBacking>(json) ?? new EntityBacking();
+            }
+            catch(Exception e)
+            {
+                Log.Err($"[AR Inventory] Unable to load entities from {FILE_NAME}!");
+                _entities = new EntityBacking();
+            }
         }
 
         /// <summary>

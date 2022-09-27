@@ -16,10 +16,12 @@ namespace ARInventory
 			displayPreference = DisplayMode.MixedReality
 		};
 
-		internal static EntityContext Context; // TODO make a singleton?
+		internal static EntityContext Context;
 
 		Matrix   floorTransform = Matrix.TS(new Vec3(0, -1.5f, 0), new Vec3(30, 0.1f, 30));
 		Material floorMaterial;
+
+		public static PassthroughFBExt Passthrough;
 
 		public void Init()
 		{
@@ -28,6 +30,9 @@ namespace ARInventory
 
             Context = new EntityContext();
 
+			// Start out with passthrough not enabled
+			Passthrough.EnabledPassthrough = false;
+
 			//SK.AddStepper<Logger>();
 			//SK.AddStepper<DebugWindow>();
 			SK.AddStepper<ManageInventory>();
@@ -35,8 +40,9 @@ namespace ARInventory
 		
 		public void Step()
 		{
-			if (SK.System.displayType == Display.Opaque)
-				Default.MeshCube.Draw(floorMaterial, floorTransform);
+			// Only draw floor when using VR headset with no AR passthrough
+            if (SK.System.displayType == Display.Opaque && !App.Passthrough.EnabledPassthrough)
+                Default.MeshCube.Draw(floorMaterial, floorTransform);
         }
     }
 }

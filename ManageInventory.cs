@@ -46,6 +46,14 @@ namespace ARInventory
             Hand rHand = Input.Hand(Handed.Right);
 
             UI.WindowBegin("manage-inventory-window", ref _pose, UIWin.Body);
+
+            if (App.Passthrough.Available)
+            {
+                bool toggle = App.Passthrough.EnabledPassthrough;
+                if (UI.ButtonRound("Passthrough", Catalog.Sprites.IconEye))
+                    App.Passthrough.EnabledPassthrough = !App.Passthrough.EnabledPassthrough;
+            }
+
             if (UI.Button("New item"))
             {
                 createNewItem();

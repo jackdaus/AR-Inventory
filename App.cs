@@ -33,8 +33,8 @@ namespace ARInventory
 			// Start out with passthrough not enabled
 			Passthrough.EnabledPassthrough = false;
 
-			//SK.AddStepper<Logger>();
-			//SK.AddStepper<DebugWindow>();
+			SK.AddStepper<Logger>();
+			SK.AddStepper<DebugWindow>();
 			SK.AddStepper<ManageInventory>();
         }
 		

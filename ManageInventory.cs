@@ -18,6 +18,9 @@ namespace ARInventory
         List<ItemDto> _visibleItems = new List<ItemDto>();
         ItemDto _focusedItem;
 
+        Pose _editWindowPose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
+        Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm); 
+
         public bool Initialize()
         {
             _model = Model.FromMesh(
@@ -66,14 +69,16 @@ namespace ARInventory
 
             UI.WindowEnd();
 
+
             // Render Items
             //
-            _visibleItems.ForEach(item =>
+            ItemDto itemToRemove = null;
+            foreach(ItemDto item in _visibleItems)
             {
                 if (UI.Handle(item.Id.ToString(), ref item.Pose, _model.Bounds))
                 {
                     // TODO this could be made more efficient by only updating once the UI handle is released
-                    Factory.UpdateItemPose(item);
+                    Mapper.UpdateItem(item);
                 }
 
                 _model.Draw(item.Pose.ToMatrix());
@@ -83,16 +88,39 @@ namespace ARInventory
                 textPosition.y += 10 * U.cm;
 
                 Quat textOrientation = Quat.LookAt(textPosition, Input.Head.position);
-                Color textColor = _focusedItem == item ? Color.White : Color.Black;
-                Text.Add(item.Title, Matrix.TR(textPosition, textOrientation), textColor);
+
+                Text.Add(item.Title, Matrix.TR(textPosition, textOrientation), Color.Black);
 
                 if (_focusedItem == item)
                 {
                     // TODO set UIBox scale to adjust to smaller/larger models
                     Mesh.Cube.Draw(Material.UIBox, item.Pose.ToMatrix(0.12f));
-                }
-            });
 
+                    textPosition.y += 8 * U.cm;
+                    _editWindowPose.position = textPosition;
+                    _editWindowPose.orientation = textOrientation;
+
+                    UI.WindowBegin("edit-title-window", ref _editWindowPose, UIWin.Body);
+                    if (UI.Input( "title-input", ref item.Title, _inputSize))
+                    {
+                        Mapper.UpdateItem(item);
+                    }
+                    UI.SameLine();
+                    if (UI.ButtonRound("delete-item-button", Catalog.Sprites.IconDelete))
+                    {
+                        itemToRemove = item;
+                    }
+                    UI.WindowEnd();
+                }
+            }
+            
+            // We must remove the item from the list while outside of the foreach loop.
+            // A collection cannot be modified while being enumerated!
+            if (itemToRemove != null)
+            {
+                Mapper.DeleteItem(itemToRemove.Id);
+                _visibleItems.Remove(itemToRemove);
+            }
 
             // Update focused item
             //
@@ -180,7 +208,7 @@ namespace ARInventory
                 Quantity = 1
             };
 
-            Factory.AddItem(newItemDto);
+            Mapper.AddItem(newItemDto);
             _visibleItems.Add(newItemDto);
             _focusedItem = newItemDto;
         }

@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="StereoKit" Version="0.3.7-preview.4" />
+    <PackageReference Include="StereoKit" Version="0.3.7-preview.5" />
   </ItemGroup>
 
   <ItemGroup>

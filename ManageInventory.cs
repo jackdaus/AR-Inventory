@@ -19,7 +19,10 @@ namespace ARInventory
         ItemDto _focusedItem;
 
         Pose _editWindowPose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
-        Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm); 
+        Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
+
+        // En lieu of spatial anchors, we use a root anchor that can be manually calibrated
+        Pose _rootAnchor = new Pose(0, 0, -0.2f);
 
         public bool Initialize()
         {
@@ -52,7 +55,6 @@ namespace ARInventory
 
             if (App.Passthrough.Available)
             {
-                bool toggle = App.Passthrough.EnabledPassthrough;
                 if (UI.ButtonRound("Passthrough", Catalog.Sprites.IconEye))
                     App.Passthrough.EnabledPassthrough = !App.Passthrough.EnabledPassthrough;
             }
@@ -70,8 +72,14 @@ namespace ARInventory
             UI.WindowEnd();
 
 
+            // Root Anchor
+            //
+            UI.Handle("root-anchor", ref _rootAnchor, _model.Bounds);
+            _model.Draw(_rootAnchor.ToMatrix());
+
             // Render Items
             //
+            Hierarchy.Push(_rootAnchor.ToMatrix());
             ItemDto itemToRemove = null;
             foreach(ItemDto item in _visibleItems)
             {
@@ -87,9 +95,12 @@ namespace ARInventory
                 Vec3 textPosition = item.Pose.position;
                 textPosition.y += 10 * U.cm;
 
-                Quat textOrientation = Quat.LookAt(textPosition, Input.Head.position);
+                Quat inverseRootOrientation = _rootAnchor.orientation.Inverse;
+                Quat textLookAtOrientation  = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
+                Quat textOrientation = inverseRootOrientation * textLookAtOrientation;
 
-                Text.Add(item.Title, Matrix.TR(textPosition, textOrientation), Color.Black);
+                Matrix textTransform = Matrix.TR(textPosition, textOrientation);
+                Text.Add(item.Title, textTransform, Color.Black);
 
                 if (_focusedItem == item)
                 {
@@ -130,7 +141,7 @@ namespace ARInventory
             }
             else
             {
-                Bounds focusedItemBounds = new Bounds(_focusedItem.Pose.position, _model.Bounds.dimensions);
+                Bounds focusedItemBounds = new Bounds(Hierarchy.ToWorld(_focusedItem.Pose.position), _model.Bounds.dimensions);
                 bool stillTouchingFocusedItem = anyFingerTipTouching(focusedItemBounds, lHand, rHand);
 
                 if (!stillTouchingFocusedItem)
@@ -140,17 +151,19 @@ namespace ARInventory
                     {
                         // Touching a different item this frame. Make it the new focused item and make a sound
                         _focusedItem = touchedItem;
-                        Sound.Click.Play(touchedItem.Pose.position);
+                        Sound.Click.Play(Hierarchy.ToWorld(touchedItem.Pose.position));
                     }
                 }
             }
+            Hierarchy.Pop();
+
         }
 
         private ItemDto firstItemTouchedByFinger(List<ItemDto> items, Hand leftHand, Hand rightHand)
         {
             foreach (var item in items)
             {
-                Bounds itemBounds = new Bounds(item.Pose.position, _model.Bounds.dimensions);
+                Bounds itemBounds = new Bounds(Hierarchy.ToWorld(item.Pose.position), _model.Bounds.dimensions);
                 if (anyFingerTipTouching(itemBounds, leftHand, rightHand))
                 {
                     return item;

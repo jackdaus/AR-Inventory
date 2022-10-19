@@ -1,4 +1,4 @@
-﻿using ARInventory.Entities;
+using ARInventory.Entities;
 using ARInventory.Entities.Models;
 using StereoKit;
 using StereoKit.Framework;
@@ -17,6 +17,7 @@ namespace ARInventory
 		};
 
 		internal static EntityContext Context;
+		internal static ItemService ItemService;
 
 		Matrix   floorTransform = Matrix.TS(new Vec3(0, -1.5f, 0), new Vec3(30, 0.1f, 30));
 		Material floorMaterial;
@@ -29,6 +30,7 @@ namespace ARInventory
 			floorMaterial.Transparency = Transparency.Blend;
 
             Context = new EntityContext();
+			ItemService = new ItemService();
 
 			// Start out with passthrough not enabled
 			Passthrough.EnabledPassthrough = false;
@@ -36,6 +38,8 @@ namespace ARInventory
 			SK.AddStepper<Logger>();
 			SK.AddStepper<DebugWindow>();
 			SK.AddStepper<ManageInventory>();
+			SK.AddStepper<Search>();
+			SK.AddStepper<Minimap>();
         }
 		
 		public void Step()

@@ -8,6 +8,10 @@ using System.Text;
 
 namespace ARInventory
 {
+    /// <summary>
+    /// Manages the UI for edditing the inventory items.
+    /// Responsible for rendering the items.
+    /// </summary>
     internal class ManageInventory : IStepper
     {
         public bool Enabled { get; set; }
@@ -15,8 +19,6 @@ namespace ARInventory
         Pose _pose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
         
         Model _model;
-        List<ItemDto> _visibleItems = new List<ItemDto>();
-        ItemDto _focusedItem;
 
         Pose _editWindowPose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
         Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
@@ -66,7 +68,7 @@ namespace ARInventory
 
             if (UI.Button("Load all items"))
             {
-                loadAllItems();
+                App.ItemService.ReloadItems();
             }
 
             UI.WindowEnd();
@@ -75,21 +77,23 @@ namespace ARInventory
             // Root Anchor
             //
             UI.Handle("root-anchor", ref _rootAnchor, _model.Bounds);
-            _model.Draw(_rootAnchor.ToMatrix());
+            _model.Draw(_rootAnchor.ToMatrix(), new Color(0, 0, 1));
 
             // Render Items
             //
             Hierarchy.Push(_rootAnchor.ToMatrix());
             ItemDto itemToRemove = null;
-            foreach(ItemDto item in _visibleItems)
+            foreach(ItemDto item in App.ItemService.Items)
             {
                 if (UI.Handle(item.Id.ToString(), ref item.Pose, _model.Bounds))
                 {
                     // TODO this could be made more efficient by only updating once the UI handle is released
-                    Mapper.UpdateItem(item);
+                    Controller.UpdateItem(item);
                 }
 
-                _model.Draw(item.Pose.ToMatrix());
+                // Highlight the item if it's the search result
+                Color modelColor = App.ItemService.SearchedItem == item ? new Color(1,0,0) : Color.White;
+                _model.Draw(item.Pose.ToMatrix(), modelColor);
 
                 // Item label floats 10cm above the object
                 Vec3 textPosition = item.Pose.position;
@@ -102,7 +106,7 @@ namespace ARInventory
                 Matrix textTransform = Matrix.TR(textPosition, textOrientation);
                 Text.Add(item.Title, textTransform, Color.Black);
 
-                if (_focusedItem == item)
+                if (App.ItemService.FocusedItem == item)
                 {
                     // TODO set UIBox scale to adjust to smaller/larger models
                     Mesh.Cube.Draw(Material.UIBox, item.Pose.ToMatrix(0.12f));
@@ -114,7 +118,7 @@ namespace ARInventory
                     UI.WindowBegin("edit-title-window", ref _editWindowPose, UIWin.Body);
                     if (UI.Input( "title-input", ref item.Title, _inputSize))
                     {
-                        Mapper.UpdateItem(item);
+                        Controller.UpdateItem(item);
                     }
                     UI.SameLine();
                     if (UI.ButtonRound("delete-item-button", Catalog.Sprites.IconDelete))
@@ -129,28 +133,28 @@ namespace ARInventory
             // A collection cannot be modified while being enumerated!
             if (itemToRemove != null)
             {
-                Mapper.DeleteItem(itemToRemove.Id);
-                _visibleItems.Remove(itemToRemove);
+                Controller.DeleteItem(itemToRemove.Id);
+                App.ItemService.Items.Remove(itemToRemove);
             }
 
             // Update focused item
             //
-            if (_focusedItem == null)
+            if (App.ItemService.FocusedItem == null)
             {
-                _focusedItem = firstItemTouchedByFinger(_visibleItems, lHand, rHand);
+                App.ItemService.FocusedItem = firstItemTouchedByFinger(App.ItemService.Items, lHand, rHand);
             }
             else
             {
-                Bounds focusedItemBounds = new Bounds(Hierarchy.ToWorld(_focusedItem.Pose.position), _model.Bounds.dimensions);
+                Bounds focusedItemBounds = new Bounds(Hierarchy.ToWorld(App.ItemService.FocusedItem.Pose.position), _model.Bounds.dimensions);
                 bool stillTouchingFocusedItem = anyFingerTipTouching(focusedItemBounds, lHand, rHand);
 
                 if (!stillTouchingFocusedItem)
                 {
-                    var touchedItem = firstItemTouchedByFinger(_visibleItems, lHand, rHand);
-                    if (touchedItem != null && touchedItem != _focusedItem)
+                    var touchedItem = firstItemTouchedByFinger(App.ItemService.Items, lHand, rHand);
+                    if (touchedItem != null && touchedItem != App.ItemService.FocusedItem)
                     {
                         // Touching a different item this frame. Make it the new focused item and make a sound
-                        _focusedItem = touchedItem;
+                        App.ItemService.FocusedItem = touchedItem;
                         Sound.Click.Play(Hierarchy.ToWorld(touchedItem.Pose.position));
                     }
                 }
@@ -221,14 +225,9 @@ namespace ARInventory
                 Quantity = 1
             };
 
-            Mapper.AddItem(newItemDto);
-            _visibleItems.Add(newItemDto);
-            _focusedItem = newItemDto;
-        }
-
-        private void loadAllItems()
-        {
-            _visibleItems = Factory.GetItemDtos().ToList();
+            Controller.AddItem(newItemDto);
+            App.ItemService.Items.Add(newItemDto);
+            App.ItemService.FocusedItem = newItemDto;
         }
     }
 }

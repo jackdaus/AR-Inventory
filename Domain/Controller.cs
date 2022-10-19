@@ -10,7 +10,7 @@ namespace ARInventory
     /// <summary>
     /// Methods to map the Entity (aka Data) layer to/from the Domain layer
     /// </summary>
-    internal static class Mapper
+    internal static class Controller
     {
         public static void AddItem(ItemDto itemDto)
         {

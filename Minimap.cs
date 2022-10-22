@@ -3,76 +3,73 @@ using StereoKit;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Numerics;
 
 namespace ARInventory
 {
-	internal class Minimap : IStepper
-	{
-		public bool Enabled { get; set; }
-		private Tex _renderTex;
-		private Material _minimapMaterial;
-		private Mesh _minimapMesh;
+    class Minimap : IStepper
+    {
+        public bool Enabled { get; set; }
+        Tex _renderTex;
+        Material _minimapMaterial;
+        Mesh     _minimapMesh;
 
-		private int _width  = 500;
-		private int _height = 500;
+        int _width  = 500;
+        int _height = 500;
 
-		public bool Initialize()
-		{
-			_renderTex = new Tex(TexType.Rendertarget, TexFormat.Rgba32);
-			_renderTex.SetSize(_width, _height);
-			_renderTex.AddZBuffer(TexFormat.Depth32);
+        public bool Initialize()
+        {
+            _renderTex = new Tex(TexType.Rendertarget, TexFormat.Rgba32);
+            _renderTex.SetSize(_width, _height);
+            _renderTex.AddZBuffer(TexFormat.Depth32);
 
-			_minimapMaterial = Default.MaterialUnlit.Copy();
-			_minimapMaterial[MatParamName.DiffuseTex] = _renderTex;
-			_minimapMaterial.FaceCull = Cull.None;
+            _minimapMaterial = Default.MaterialUnlit.Copy();
+            _minimapMaterial[MatParamName.DiffuseTex] = _renderTex;
+            _minimapMaterial.FaceCull = Cull.None;
 
-			_minimapMesh = Mesh.GeneratePlane(Vec2.One * 2 * U.cm, Vec3.UnitZ, Vec3.UnitY);
+            _minimapMesh = Mesh.GeneratePlane(Vec2.One * 10 * U.cm, Vec3.UnitZ, Vec3.UnitY);
 
             return true;
-		}
+        }
 
-		public void Shutdown()
-		{
-			
-		}
+        public void Shutdown()
+        {
+            
+        }
 
-		public void Step()
-		{
-			//Vec3 minimapPosition = Input.Head.position + Input.Head.Forward * 0.5f;
-			//Quat minimapOrientation = Quat.LookAt(minimapPosition, Input.Head.position);
-			//Default.MeshQuad.Draw(_minimapMaterial, Matrix.TR(minimapPosition, minimapOrientation));
+        public void Step()
+        {
+            Pose rHandPalmPose = Input.Hand(Handed.Right).palm;
+            DebugTools.DisplayPosition(rHandPalmPose);
 
-			Hierarchy.Push(Input.Head.ToMatrix());
-			//Default.MeshQuad.Draw(_minimapMaterial, Matrix.TR(1, -0.4f, -1, -Vec3.UnitY * 2));
-			//_minimapMesh.Draw(_minimapMaterial, Matrix.TR(1, -0.4f, -1, -Vec3.UnitY * 2));
-			_minimapMesh.Draw(_minimapMaterial, Matrix.T(0.03f, -0.01f, -0.025f));
-			
+            // Minimap located 5 cm above user's hand
+            Vec3 minimapPosition = rHandPalmPose.position;
+            minimapPosition += rHandPalmPose.Forward * -5 * U.cm;
+
+            // Oriented in same direction as user's palm. The "Up" direction should always point along the Z-Axis 
+            // to make sure the orientation matches with the world.
+            Quat minimapOrientation = Quat.LookAt(minimapPosition, rHandPalmPose.position, -Vec3.UnitZ);
+            Matrix minimapTransform = Matrix.TR(minimapPosition, minimapOrientation);
+
+            Hierarchy.Push(minimapTransform);
+            Lines.AddAxis(new Pose());
+            _minimapMesh.Draw(_minimapMaterial, Matrix.Identity); 
             Hierarchy.Pop();
 
-            // Camera is located 3m above user and the Yaw has same orientation as the user's head
-            Quat cameraOrientation = Quat.LookAt(Vec3.Zero, new Vec3(0, -1, 0), Input.Head.Forward);
-			Vec3 cameraLocation    = Input.Head.position + Vec3.UnitY * 3 * U.m;
-			Matrix camera          = Matrix.TR(cameraLocation, cameraOrientation);
+            // Camera is located 3m above user, looking down
+            Quat cameraOrientation = Quat.LookAt(Vec3.Zero, new Vec3(0, -1, 0));
+            Vec3 cameraLocation    = Input.Head.position + Vec3.UnitY * 3 * U.m;
+            Matrix camera          = Matrix.TR(cameraLocation, cameraOrientation);
 
+            // TODO orthographic projection would be better, but can't seem to get it to work
+            //Renderer.RenderTo(_rendersDTex, Matrix.Identity, Matrix.Orthographic(_width, _height, 0.01f, 100));
+            //Renderer.RenderTo(_renderTex, 
+            //    camera, 
+            //    Matrix.Orthographic(_width, _height, 0.01f, 100));
 
-			// TODO orthographic projection would be better, but can't seem to get it to work
-			//Renderer.RenderTo(_rendersDTex, Matrix.Identity, Matrix.Orthographic(_width, _height, 0.01f, 100));
-			//Renderer.RenderTo(_renderTex, 
-			//    camera, 
-			//    Matrix.Orthographic(_width, _height, 0.01f, 100));
-
-			Renderer.RenderTo(_renderTex,
-				camera,
-				Matrix.Perspective(70, (float)_width / _height, 0.01f, 100));
-		}
-
-		private void debugDisplay()
-		{
-			Vec3 textPosition = Input.Head.position + (Input.Head.Forward * 0.3f) + (Input.Head.Up * -0.15f);
-			Quat textOrientation = Quat.LookAt(textPosition, Input.Head.position);
-			Text.Add("O.x: " + Input.Head.orientation.x.ToString("0.000"), Matrix.TR(textPosition, textOrientation));
-			Text.Add("O.y: " + Input.Head.orientation.y.ToString("0.000"), Matrix.TR(textPosition + (Input.Head.Up * -0.03f), textOrientation));
-			Text.Add("O.z: " + Input.Head.orientation.z.ToString("0.000"), Matrix.TR(textPosition + (Input.Head.Up * -0.06f), textOrientation));
-		}
-	}
+            Renderer.RenderTo(_renderTex,
+                camera,
+                Matrix.Perspective(70, (float)_width / _height, 0.01f, 100));
+        }
+    }
 }

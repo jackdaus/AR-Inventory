@@ -1,21 +1,30 @@
-﻿using StereoKit.Framework;
+using StereoKit.Framework;
 using StereoKit;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Numerics;
+using static ARInventory.Catalog;
 
 namespace ARInventory
 {
+    // TODO
+    // 1. Fade map visible with angle OR Activte / Deactivate Minimap
+    // 2. Circular Map
+    // 3. Render Layers
+    // 4. Add some sounds!
     class Minimap : IStepper
     {
         public bool Enabled { get; set; }
-        Tex _renderTex;
+
+        Tex      _renderTex;
         Material _minimapMaterial;
         Mesh     _minimapMesh;
-
-        int _width  = 500;
-        int _height = 500;
+        Material _gridLineMaterial;
+        Material _backgroundMaterial;
+        Matrix   _floorTransform = Matrix.TS(new Vec3(0, -1.5f, 0), new Vec3(30, 0.1f, 30));
+        int      _width  = 500;
+        int      _height = 500;
 
         public bool Initialize()
         {
@@ -29,6 +38,12 @@ namespace ARInventory
 
             _minimapMesh = Mesh.GeneratePlane(Vec2.One * 10 * U.cm, Vec3.UnitZ, Vec3.UnitY);
 
+            _gridLineMaterial = new Material(Shader.FromFile("floor.hlsl"));
+            _gridLineMaterial.Transparency = Transparency.Blend;
+
+            _backgroundMaterial = Default.MaterialUnlit.Copy();
+            _backgroundMaterial[MatParamName.DiffuseTex] = Tex.Flat;
+
             return true;
         }
 
@@ -40,7 +55,6 @@ namespace ARInventory
         public void Step()
         {
             Pose rHandPalmPose = Input.Hand(Handed.Right).palm;
-            DebugTools.DisplayPosition(rHandPalmPose);
 
             // Minimap located 5 cm above user's hand
             Vec3 minimapPosition = rHandPalmPose.position;
@@ -52,8 +66,7 @@ namespace ARInventory
             Matrix minimapTransform = Matrix.TR(minimapPosition, minimapOrientation);
 
             Hierarchy.Push(minimapTransform);
-            Lines.AddAxis(new Pose());
-            _minimapMesh.Draw(_minimapMaterial, Matrix.Identity); 
+            _minimapMesh.Draw(_minimapMaterial, Matrix.Identity);
             Hierarchy.Pop();
 
             // Camera is located 3m above user, looking down
@@ -61,15 +74,16 @@ namespace ARInventory
             Vec3 cameraLocation    = Input.Head.position + Vec3.UnitY * 3 * U.m;
             Matrix camera          = Matrix.TR(cameraLocation, cameraOrientation);
 
-            // TODO orthographic projection would be better, but can't seem to get it to work
-            //Renderer.RenderTo(_rendersDTex, Matrix.Identity, Matrix.Orthographic(_width, _height, 0.01f, 100));
-            //Renderer.RenderTo(_renderTex, 
-            //    camera, 
-            //    Matrix.Orthographic(_width, _height, 0.01f, 100));
+            // TODO draw a grid on the minimap without drawing it in user's virtual world... maybe use Blit?
+            // Draw background color and grid lines
+            //Default.MeshCube.Draw(_backgroundMaterial, _floorTransform * Matrix.T(-Vec3.UnitY), Color.White, RenderLayer.Layer1);
+            //Default.MeshCube.Draw(_gridLineMaterial,   _floorTransform,                         Color.White, RenderLayer.Layer1);
 
+            // Orthographic projection of a 3m x 3m sqaure area
             Renderer.RenderTo(_renderTex,
                 camera,
-                Matrix.Perspective(70, (float)_width / _height, 0.01f, 100));
+                Matrix.Orthographic(3 * U.m, 3 * U.m, 0.01f, 100),
+                layerFilter: RenderLayer.Layer1);
         }
     }
 }

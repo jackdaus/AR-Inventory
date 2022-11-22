@@ -32,7 +32,7 @@ namespace ARInventory
             Context = new EntityContext();
             ItemService = new ItemService();
 
-            // Start out with passthrough not enabled
+            // Start out with passthrough off
             Passthrough.EnabledPassthrough = false;
 
             SK.AddStepper<Logger>();

@@ -93,7 +93,11 @@ namespace ARInventory
 
                 // Highlight the item if it's the search result
                 Color modelColor = App.ItemService.SearchedItem == item ? new Color(1,0,0) : Color.White;
-                _model.Draw(item.Pose.ToMatrix(), modelColor);
+
+                // Draw the items to Layer1, which will be used to render the Minimap.
+                // We don't want to render the menus and other UI in the Minimap, just
+                // the items. So rendering to a specific layer is the solution!
+                _model.Draw(item.Pose.ToMatrix(), modelColor, layer: RenderLayer.Layer1);
 
                 // Item label floats 10cm above the object
                 Vec3 textPosition = item.Pose.position;

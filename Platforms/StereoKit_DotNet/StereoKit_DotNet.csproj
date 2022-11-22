@@ -3,6 +3,9 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net6.0</TargetFramework>
+
+		<SKAssetFolder>../../Assets</SKAssetFolder>
+		<SKAssetDestination>Assets</SKAssetDestination>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -11,14 +14,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\ARInventory.csproj" />
-	</ItemGroup>
-
-	<!-- Copy assets, and build the app's shaders into the final app folder -->
-	<ItemGroup>
-		<Content Include="$(SolutionDir)Assets\**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<Link>Assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
-		</Content>
 	</ItemGroup>
 
 </Project>

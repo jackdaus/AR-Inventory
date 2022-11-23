@@ -1,18 +1,12 @@
 using StereoKit.Framework;
 using StereoKit;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Numerics;
-using static ARInventory.Catalog;
 
 namespace ARInventory
 {
     // TODO
     // 1. Fade map visible with angle OR Activte / Deactivate Minimap
-    // 2. Circular Map
-    // 3. Render Layers
-    // 4. Add some sounds!
+    // 2. Render Layers
+    // 3. Add some sounds!
     class Minimap : IStepper
     {
         public bool Enabled { get; set; }
@@ -28,7 +22,7 @@ namespace ARInventory
 
         public bool Initialize()
         {
-            _renderTex = new Tex(TexType.Rendertarget, TexFormat.Rgba32);
+            _renderTex = new Tex(TexType.Rendertarget);
             _renderTex.SetSize(_width, _height);
             _renderTex.AddZBuffer(TexFormat.Depth32);
 
@@ -36,13 +30,13 @@ namespace ARInventory
             _minimapMaterial[MatParamName.DiffuseTex] = _renderTex;
             _minimapMaterial.FaceCull = Cull.None;
 
-            _minimapMesh = Mesh.GeneratePlane(Vec2.One * 10 * U.cm, Vec3.UnitZ, Vec3.UnitY);
+			_minimapMesh = Mesh.GenerateCircle(10 * U.cm, Vec3.UnitZ, Vec3.UnitY, 50);
 
-            _gridLineMaterial = new Material(Shader.FromFile("floor.hlsl"));
+			_gridLineMaterial = new Material(Shader.FromFile("floor.hlsl"));
             _gridLineMaterial.Transparency = Transparency.Blend;
 
             _backgroundMaterial = Default.MaterialUnlit.Copy();
-            _backgroundMaterial[MatParamName.DiffuseTex] = Tex.Flat;
+            _backgroundMaterial[MatParamName.DiffuseTex] = Tex.Error;
 
             return true;
         }
@@ -77,7 +71,7 @@ namespace ARInventory
             // TODO draw a grid on the minimap without drawing it in user's virtual world... maybe use Blit?
             // Draw background color and grid lines
             //Default.MeshCube.Draw(_backgroundMaterial, _floorTransform * Matrix.T(-Vec3.UnitY), Color.White, RenderLayer.Layer1);
-            //Default.MeshCube.Draw(_gridLineMaterial,   _floorTransform,                         Color.White, RenderLayer.Layer1);
+            //Default.MeshCube.Draw(_gridLineMaterial, _floorTransform, Color.White, RenderLayer.Layer1);
 
             // Orthographic projection of a 3m x 3m sqaure area
             Renderer.RenderTo(_renderTex,

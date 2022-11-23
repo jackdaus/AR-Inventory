@@ -3,6 +3,7 @@ using StereoKit;
 using StereoKit.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -26,13 +27,24 @@ namespace ARInventory
         public void Step()
         {
             UI.WindowBegin("Test Window", ref menuPose);
-            if (UI.Button("Test file"))
+            if (UI.Button("Test write file"))
             {
-                Log.Info($"Begin testing file! {DateTime.Now}");
-                var isSuccessful = Platform.WriteFile($"my-new-file-{DateTime.Now.Ticks}.txt", $"this is the content {DateTime.Now}");
+                var appDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var filename = Path.Combine(appDocsPath, "my-file.txt");
+
+                Log.Info($"Begin writing test file! {DateTime.Now}");
+                var isSuccessful = Platform.WriteFile(filename, $"this is the content {DateTime.Now}");
                 Log.Info($"Result of flile write: {isSuccessful}");
             }
-            if (UI.Button("Pick file"))
+			if (UI.Button("Test read file"))
+			{
+				var temp = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+				Log.Info($"Begin reading test file! {DateTime.Now}");
+				var isSuccessful = Platform.ReadFile($"{temp}/my-file.txt", out string data);
+				Log.Info($"Result of flile read: {isSuccessful}");
+                Log.Info($"data: {data}");
+			}
+			if (UI.Button("Pick file"))
             {
                 Platform.FilePicker(PickerMode.Open, logFileContents, null);
             }

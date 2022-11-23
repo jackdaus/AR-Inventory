@@ -23,6 +23,7 @@ namespace ARInventory
         Material floorMaterial;
 
         public static PassthroughFBExt Passthrough;
+        public static bool IsAndroid;
 
         public void Init()
         {

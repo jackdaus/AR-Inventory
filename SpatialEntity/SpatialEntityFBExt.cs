@@ -15,16 +15,17 @@ namespace SpatialEntity
 		bool extAvailable;
 		bool enabled;
 
-		public List<Anchor> Anchors = new List<Anchor>();
+		public Dictionary<Guid, Anchor> Anchors = new Dictionary<Guid, Anchor>();
 
 		public class Anchor
 		{
-			public XrAsyncRequestIdFB RequestId;
-			public Guid Uuid;
+			public XrAsyncRequestIdFB RequestId; // TODO preobably remove this>?
+			public Guid Uuid; // TODO probably remove this?
 			public XrSpace XrSpace;
 			public Pose Pose;
-			public bool IsLoaded;
+			public bool IsLoaded; // TODO probably remove this?
 			public bool LoadFailed;
+			public bool LocateSuccess;
 		}
 
 		public bool Available => extAvailable;
@@ -61,24 +62,28 @@ namespace SpatialEntity
 		public void Step()
 		{
 			// Update the anchor pose periodically because the anchor may drift slightly in the Meta Quest runtime.
-			Anchors.ForEach(a =>
+			foreach(var anchor in Anchors.Values)
 			{
 				XrSpaceLocation spaceLocation = new XrSpaceLocation { type = XrStructureType.XR_TYPE_SPACE_LOCATION };
 
 				// TODO consider using XrFrameState.predictedDisplayTime for XrTime argument
-				XrResult result = xrLocateSpace(a.XrSpace, Backend.OpenXR.Space, Backend.OpenXR.Time, out spaceLocation);
+				XrResult result = xrLocateSpace(anchor.XrSpace, Backend.OpenXR.Space, Backend.OpenXR.Time, out spaceLocation);
 				if (result == XrResult.Success)
 				{
 					var orientationValid = spaceLocation.locationFlags.HasFlag(XrSpaceLocationFlags.XR_SPACE_LOCATION_ORIENTATION_VALID_BIT);
 					var poseValid        = spaceLocation.locationFlags.HasFlag(XrSpaceLocationFlags.XR_SPACE_LOCATION_POSITION_VALID_BIT);
 					if (orientationValid && poseValid)
-						a.Pose = spaceLocation.pose;
+					{
+						anchor.Pose = spaceLocation.pose;
+						anchor.LocateSuccess = true;
+					}
 				}
 				else
 				{
 					Log.Err($"xrLocateSpace error! Result: {result}");
+					anchor.LocateSuccess = false;
 				}
-			});
+			}
 		}
 
 		public void Shutdown()
@@ -119,15 +124,18 @@ namespace SpatialEntity
 			
 			Log.Info($"xrCreateSpatialAnchorFB initiated. The request id is: {requestId}. Result: {result}");
 
-			var newAnchor = new Anchor()
-			{
-				RequestId = requestId,
-				Pose = Pose.Identity,
-				IsLoaded = false
-			};
-			Anchors.Add(newAnchor);
+			// TODO 
 
-			return newAnchor;
+			//var newAnchor = new Anchor()
+			//{
+			//	RequestId = requestId,
+			//	Pose = Pose.Identity,
+			//	IsLoaded = false
+			//};
+			//Anchors.Add(newAnchor);
+
+			//return newAnchor;
+			return null;
 		}
 
 		public void LoadAnchors()
@@ -140,7 +148,12 @@ namespace SpatialEntity
 
 		public void EraseAnchors()
 		{
-			Anchors.ForEach(a => eraseSpace(a.XrSpace));
+			foreach(var anchor in Anchors.Values)
+			{
+				// Initiate the async erase operation. Then we will remove it from the Dictionary once the event 
+				// completes (in the poll handler).
+				eraseSpace(anchor.XrSpace);
+			}
 		}
 
 		// XR_FB_spatial_entity
@@ -203,25 +216,20 @@ namespace SpatialEntity
 				case XrStructureType.XR_TYPE_EVENT_DATA_SPATIAL_ANCHOR_CREATE_COMPLETE_FB:
 					XrEventDataSpatialAnchorCreateCompleteFB spatialAnchorComplete = Marshal.PtrToStructure<XrEventDataSpatialAnchorCreateCompleteFB>(XrEventDataBufferData);
 
-					var anchor = Anchors.Where(a => a.RequestId == spatialAnchorComplete.requestId).FirstOrDefault();
-					if (anchor == null)
-					{
-						Log.Info($"When anchor completed creation, the requestId {spatialAnchorComplete.requestId} was not found! Maybe it was deleted before this event?");
-						break;
-					}
-
 					if (spatialAnchorComplete.result != XrResult.Success)
 					{
 						Log.Err($"XrEventDataSpatialAnchorCreateCompleteFB error! Result: {spatialAnchorComplete.result}");
-						anchor.LoadFailed = true;
 						break;
 					}
-					else
+
+					var newCreatedAnchor = new Anchor
 					{
-						anchor.XrSpace = spatialAnchorComplete.space;
-						anchor.Uuid = spatialAnchorComplete.uuid;
-						anchor.IsLoaded = true;
-					}
+						RequestId = spatialAnchorComplete.requestId,
+						XrSpace = spatialAnchorComplete.space,
+						Uuid = spatialAnchorComplete.uuid,
+						IsLoaded = true
+					};
+					Anchors.Add(spatialAnchorComplete.uuid, newCreatedAnchor);
 
 					// When anchor is first created, the component STORABLE is not yet set. So we do it here.
 					if (isComponentSupported(spatialAnchorComplete.space, XrSpaceComponentTypeFB.XR_SPACE_COMPONENT_TYPE_STORABLE_FB))
@@ -250,13 +258,15 @@ namespace SpatialEntity
 						}
 						else if (setStatusComplete.componentType == XrSpaceComponentTypeFB.XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB)
 						{
-							// TODO
 							// Spatial entity component was loaded from storage and component succesfully set to LOCATABLE.
-							Anchors.Add(new Anchor
+							var newLoadedAnchor = new Anchor
 							{
 								XrSpace = setStatusComplete.space,
 								Uuid = setStatusComplete.uuid,
-							});
+								IsLoaded = true
+							};
+
+							Anchors.Add(setStatusComplete.uuid, newLoadedAnchor);
 						}
 					}
 					else
@@ -280,8 +290,7 @@ namespace SpatialEntity
 					break;
 				case XrStructureType.XR_TYPE_EVENT_DATA_SPACE_ERASE_COMPLETE_FB:
 					XrEventDataSpaceEraseCompleteFB eraseComplete = Marshal.PtrToStructure<XrEventDataSpaceEraseCompleteFB>(XrEventDataBufferData);
-					var erasedAnchor = Anchors.Find(a => a.Uuid == eraseComplete.uuid);
-					Anchors.Remove(erasedAnchor);
+					Anchors.Remove(eraseComplete.uuid);
 
 					break;
 				case XrStructureType.XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB:

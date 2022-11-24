@@ -42,9 +42,9 @@ class DebugFBSpatialEntity : IStepper
 		UI.WindowEnd();
 
 		// Spatial anchor visual
-		App.SpatialEntity.Anchors.ForEach(anchor =>
+		foreach(var anchor in App.SpatialEntity.Anchors.Values)
 		{
 			Mesh.Cube.Draw(Material.Default, anchor.Pose.ToMatrix(0.01f), new Color(1, 0.5f, 0));
-		});
+		}
 	}
 }

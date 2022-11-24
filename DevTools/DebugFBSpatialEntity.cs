@@ -44,7 +44,7 @@ class DebugFBSpatialEntity : IStepper
 		// Spatial anchor visual
 		App.SpatialEntity.Anchors.ForEach(anchor =>
 		{
-			Mesh.Cube.Draw(Material.Default, anchor.Pose.ToMatrix(0.2f), new Color(1, 0.5f, 0));
+			Mesh.Cube.Draw(Material.Default, anchor.Pose.ToMatrix(0.01f), new Color(1, 0.5f, 0));
 		});
 	}
 }

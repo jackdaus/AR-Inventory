@@ -60,7 +60,7 @@ namespace ARInventory
 
                 allItems.ForEach(item => App.Context.Items.Remove(item));
                 App.Context.SaveChanges();
-                App.ItemService.ReloadItems();
+                App.ItemService.ReloadItemsFromStorage();
 			}
 
 			//if (UI.Button("Quit")) SK.Quit();

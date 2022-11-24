@@ -16,6 +16,7 @@ namespace ARInventory
         {
             Item item = new Item();
             item.Id = itemDto.Id;
+            item.SpatialAnchorUuid = itemDto.SpatialAnchorUuid;
             item.LocationX = itemDto.Pose.position.x;
             item.LocationY = itemDto.Pose.position.y;
             item.LocationZ = itemDto.Pose.position.z;
@@ -33,8 +34,9 @@ namespace ARInventory
         public static void UpdateItem(ItemDto itemDto)
         {
             var item = App.Context.Items.Find(itemDto.Id);
+            item.SpatialAnchorUuid = itemDto.SpatialAnchorUuid;
             item.LocationX = itemDto.Pose.position.x;
-            item.LocationY = itemDto.Pose.position.y;
+			item.LocationY = itemDto.Pose.position.y;
             item.LocationZ = itemDto.Pose.position.z;
             item.OrientationX = itemDto.Pose.orientation.x;
             item.OrientationY = itemDto.Pose.orientation.y;
@@ -50,7 +52,9 @@ namespace ARInventory
         public static void DeleteItem(Guid itemId)
         {
             var item = App.Context.Items.Find(itemId);
+            //TODO erase anchor?
             App.Context.Items.Remove(item);
-        }
-    }
+			App.Context.SaveChanges();
+		}
+	}
 }

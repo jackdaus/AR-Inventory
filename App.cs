@@ -1,11 +1,6 @@
 using ARInventory.Entities;
-using ARInventory.Entities.Models;
 using SpatialEntity;
 using StereoKit;
-using StereoKit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ARInventory
 {
@@ -32,7 +27,7 @@ namespace ARInventory
             floorMaterial = new Material(Shader.FromFile("floor.hlsl"));
             floorMaterial.Transparency = Transparency.Blend;
 
-            Context = new EntityContext();
+            Context     = new EntityContext();
             ItemService = new ItemService();
 
             // Start out with passthrough off

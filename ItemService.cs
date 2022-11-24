@@ -16,7 +16,7 @@ namespace ARInventory
             Items = Factory.GetItemDtos().ToList();
         }
 
-        public void ReloadItems()
+        public void ReloadItemsFromStorage()
         {
             // TODO this might cause issues with object reference since the DTO objects are new...
             // Consider refactoring to use struct based data? And then reference by ID? TBD

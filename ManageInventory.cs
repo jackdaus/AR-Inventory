@@ -46,7 +46,7 @@ namespace ARInventory
 
         public void Step()
         {
-            // Store the hands for the frame since we will reuse them
+            // Store the hands for the frame since we will use them in a few places
             Hand lHand = Input.Hand(Handed.Left);
             Hand rHand = Input.Hand(Handed.Right);
 
@@ -65,7 +65,7 @@ namespace ARInventory
 
             if (UI.Button("Load all items"))
             {
-                App.ItemService.ReloadItems();
+                App.ItemService.ReloadItemsFromStorage();
             }
 
             UI.WindowEnd();
@@ -73,20 +73,24 @@ namespace ARInventory
 
             // Render Items
             //
-            ItemDto itemToRemove = null;
-            foreach(ItemDto item in App.ItemService.Items)
+            foreach(ItemDto item in App.ItemService.Items.ToList())
             {
                 // If spatial anchors are present and loaded, we will use the anchor as a root for the item.
-                // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the anchor root.
-                var useAnchorRoot = item.SpatialAnchor != null && item.SpatialAnchor.IsLoaded;
-				if (useAnchorRoot)
-                {
+                // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the
+                // anchor root... mostly for dev purposes
+				if (item.SpatialAnchorIsValid)
                     Hierarchy.Push(item.SpatialAnchor.Pose.ToMatrix());
-                }
 
+                // Update location data in persistent storage
                 if (UI.Handle(item.Id.ToString(), ref item.Pose, _model.Bounds))
+                    Controller.UpdateItem(item); // TODO this could be made more efficient by only updating once the UI handle is released
+
+				// Update anchor Id in persistent storage. We do this here because the anchor Uuid creation is async! 
+				// So we here we're checking to see if the item's anchor might have been created/changed since the 
+				// last Step.
+				if (item.SpatialAnchorIsValid && item.SpatialAnchor.Uuid != item.SpatialAnchorUuid)
                 {
-                    // TODO this could be made more efficient by only updating once the UI handle is released
+                    item.SpatialAnchorUuid = item.SpatialAnchor.Uuid;
                     Controller.UpdateItem(item);
                 }
 
@@ -105,7 +109,7 @@ namespace ARInventory
 				Quat textOrientation = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
 
                 // Correct the text angle to remove rotation from the anchor
-                if (useAnchorRoot)
+                if (item.SpatialAnchorIsValid)
                 {
 				    Quat inverseRootOrientation = item.SpatialAnchor.Pose.orientation.Inverse;
 					textOrientation = inverseRootOrientation * textOrientation;
@@ -131,26 +135,18 @@ namespace ARInventory
                     UI.SameLine();
                     if (UI.ButtonRound("delete-item-button", Catalog.Sprites.IconDelete))
                     {
-                        itemToRemove = item;
-                    }
+						Controller.DeleteItem(item.Id);
+						App.ItemService.Items.Remove(item);
+					}
                     UI.Label($"Anchored: {item.SpatialAnchor != null}");
                     UI.Label($"Anchor Loaded: {item.SpatialAnchor != null && item.SpatialAnchor.IsLoaded}");
 					UI.WindowEnd();
                 }
 
-				if (useAnchorRoot)
-				{
+				if (item.SpatialAnchorIsValid)
                     Hierarchy.Pop();
-				}
 			}
-            
-            // We must remove the item from the list while outside of the foreach loop.
-            // A collection cannot be modified while being enumerated!
-            if (itemToRemove != null)
-            {
-                Controller.DeleteItem(itemToRemove.Id);
-                App.ItemService.Items.Remove(itemToRemove);
-            }
+           
 
             // Update focused item
             //
@@ -240,7 +236,7 @@ namespace ARInventory
             var anchor = App.SpatialEntity.CreateAnchor(new Pose(newItemPosition, Quat.Identity));
 
             if (anchor == null)
-                throw new Exception("Error creating new item. Cannot create a new anchor.");
+                Log.Err("Error creating new item. Cannot create a new anchor.");
 
             var newItemDto = new ItemDto
             {

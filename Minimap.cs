@@ -12,18 +12,14 @@ namespace ARInventory
         public bool Enabled { get; set; }
 
         Tex      _renderTex;
-        Material _minimapMaterial;
         Mesh     _minimapMesh;
-        Material _gridLineMaterial;
+        Material _minimapMaterial;
         Material _backgroundMaterial;
-        Matrix   _floorTransform = Matrix.TS(new Vec3(0, -1.5f, 0), new Vec3(30, 0.1f, 30));
-        int      _width  = 500;
-        int      _height = 500;
 
         public bool Initialize()
         {
             _renderTex = new Tex(TexType.Rendertarget);
-            _renderTex.SetSize(_width, _height);
+            _renderTex.SetSize(500, 500);
             _renderTex.AddZBuffer(TexFormat.Depth32);
 
             _minimapMaterial = Default.MaterialUnlit.Copy();
@@ -32,13 +28,11 @@ namespace ARInventory
 
 			_minimapMesh = Mesh.GenerateCircle(10 * U.cm, Vec3.UnitZ, Vec3.UnitY, 50);
 
-			_gridLineMaterial = new Material(Shader.FromFile("floor.hlsl"));
-            _gridLineMaterial.Transparency = Transparency.Blend;
+            // TODO v0.3.7 use built-in blit shader
+			_backgroundMaterial = new Material(Shader.Find("default/shader_blit"));
+			_backgroundMaterial["source"] = Tex.Gray;
 
-            _backgroundMaterial = Default.MaterialUnlit.Copy();
-            _backgroundMaterial[MatParamName.DiffuseTex] = Tex.Error;
-
-            return true;
+			return true;
         }
 
         public void Shutdown()
@@ -68,16 +62,16 @@ namespace ARInventory
             Vec3 cameraLocation    = Input.Head.position + Vec3.UnitY * 3 * U.m;
             Matrix camera          = Matrix.TR(cameraLocation, cameraOrientation);
 
-            // TODO draw a grid on the minimap without drawing it in user's virtual world... maybe use Blit?
-            // Draw background color and grid lines
-            //Default.MeshCube.Draw(_backgroundMaterial, _floorTransform * Matrix.T(-Vec3.UnitY), Color.White, RenderLayer.Layer1);
-            //Default.MeshCube.Draw(_gridLineMaterial, _floorTransform, Color.White, RenderLayer.Layer1);
+            // Draw a background color
+            Renderer.Blit(_renderTex, _backgroundMaterial);
 
-            // Orthographic projection of a 3m x 3m sqaure area
-            Renderer.RenderTo(_renderTex,
+			// Orthographic projection of a 3m x 3m sqaure area Don't clear color
+			// buffer, or else our background color will get overwritten with black!
+			Renderer.RenderTo(_renderTex,
                 camera,
                 Matrix.Orthographic(3 * U.m, 3 * U.m, 0.01f, 100),
-                layerFilter: RenderLayer.Layer1);
+                layerFilter: RenderLayer.Layer1, 
+                RenderClear.Depth);
         }
     }
 }

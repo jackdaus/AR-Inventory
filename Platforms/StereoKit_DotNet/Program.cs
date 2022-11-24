@@ -1,6 +1,7 @@
 using System;
 using StereoKit;
 using ARInventory;
+using SpatialEntity;
 
 class SKLoader
 {
@@ -21,7 +22,8 @@ class SKLoader
 			throw new Exception("StereoKit loader couldn't construct an instance of the App!");
 
         // Create passthrough stepper here. MUST be done before call to SK.Initialize
-        App.Passthrough = SK.AddStepper(new PassthroughFBExt());
+        App.Passthrough   = SK.AddStepper(new PassthroughFBExt());
+		App.SpatialEntity = SK.AddStepper(new SpatialEntityFBExt());
 
 		// Initialize StereoKit, and the app
 		if (!SK.Initialize(app.Settings))

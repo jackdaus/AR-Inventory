@@ -11,7 +11,7 @@ namespace ARInventory
 {
     public class DebugWindow : IStepper
     {
-        private Pose menuPose = new Pose(0.4f, 0, -0.4f, Quat.LookDir(-1, 0, 1));
+        private Pose menuPose = new Pose(0.4f, -0.1f, -0.4f, Quat.LookDir(-1, 0, 1));
 
         public bool Enabled { get; set; }
 
@@ -54,10 +54,17 @@ namespace ARInventory
             {
                 testContext();
             }
-            UI.Label("Factory");
+			if (UI.Button("Test: Clean db"))
+			{
+                var allItems = App.Context.Items.ToList();
 
-            //if (UI.Button("Quit")) SK.Quit();
-            UI.WindowEnd();
+                allItems.ForEach(item => App.Context.Items.Remove(item));
+                App.Context.SaveChanges();
+                App.ItemService.ReloadItems();
+			}
+
+			//if (UI.Button("Quit")) SK.Quit();
+			UI.WindowEnd();
         }
 
         private void logFileContents(string file)

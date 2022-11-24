@@ -1,5 +1,6 @@
 using ARInventory.Entities;
 using ARInventory.Entities.Models;
+using SpatialEntity;
 using StereoKit;
 using StereoKit.Framework;
 using System;
@@ -22,7 +23,8 @@ namespace ARInventory
         Matrix   floorTransform = Matrix.TS(new Vec3(0, -1.5f, 0), new Vec3(30, 0.1f, 30));
         Material floorMaterial;
 
-        public static PassthroughFBExt Passthrough;
+        public static PassthroughFBExt   Passthrough;
+        public static SpatialEntityFBExt SpatialEntity;
         public static bool IsAndroid;
 
         public void Init()
@@ -35,13 +37,20 @@ namespace ARInventory
 
             // Start out with passthrough off
             Passthrough.EnabledPassthrough = false;
+            
+            // Load anchors
+            SpatialEntity.Enabled = true;
+            if(SpatialEntity.Available)
+                SpatialEntity.LoadAnchors();
 
             SK.AddStepper<Logger>();
-            SK.AddStepper<DebugWindow>();
             SK.AddStepper<ManageInventory>();
             SK.AddStepper<Search>();
             SK.AddStepper<Minimap>();
-        }
+
+            SK.AddStepper<DebugWindow>();
+            SK.AddStepper<DebugFBSpatialEntity>();
+		}
         
         public void Step()
         {

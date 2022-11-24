@@ -1,7 +1,7 @@
 ﻿using System;
 using XrFlags64 = System.UInt64;
 
-namespace SpatialEntityFBExt
+namespace SpatialEntity
 {
 	enum XrSpaceLocationFlags : XrFlags64
 	{

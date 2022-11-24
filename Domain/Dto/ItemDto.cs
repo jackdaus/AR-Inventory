@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static SpatialEntity.SpatialEntityFBExt;
 
 namespace ARInventory
 {
@@ -9,7 +10,8 @@ namespace ARInventory
     {
         public Guid Id;
         public Pose Pose;
-        public string Title;
+        public Anchor SpatialAnchor;
+		public string Title;
         public int Quantity;
     }
 }

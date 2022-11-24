@@ -6,7 +6,7 @@ using XrSpace            = System.UInt64;
 using XrSession          = System.UInt64;
 using XrAsyncRequestIdFB = System.UInt64;
 
-namespace SpatialEntityFBExt
+namespace SpatialEntity
 {
 	#region XR_FB_spatial_entity
 

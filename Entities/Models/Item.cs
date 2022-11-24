@@ -7,7 +7,8 @@ namespace ARInventory.Entities.Models
     public class Item : IGotId
     {
         public Guid Id { get; set; }
-        public float LocationX { get; set; }
+        public Guid AnchorUuid { get; set; }
+		public float LocationX { get; set; }
         public float LocationY { get; set; }
         public float LocationZ { get; set; }
         public float OrientationX { get; set; }

@@ -7,7 +7,8 @@ using XrDuration         = System.Int64;
 using XrSpace            = System.UInt64;
 using XrAsyncRequestIdFB = System.UInt64;
  
-namespace SpatialEntityFBExt
+// TODO remove dummy params after upgrading to C#10+
+namespace SpatialEntity
 {
 	[StructLayout(LayoutKind.Sequential)]
 	struct XrEventDataBuffer

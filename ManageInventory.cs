@@ -23,9 +23,6 @@ namespace ARInventory
         Pose _editWindowPose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
         Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
 
-        // En lieu of spatial anchors, we use a root anchor that can be manually calibrated
-        Pose _rootAnchor = new Pose(0, 0, -0.2f);
-
         public bool Initialize()
         {
             _model = Model.FromMesh(
@@ -74,17 +71,19 @@ namespace ARInventory
             UI.WindowEnd();
 
 
-            // Root Anchor
-            //
-            UI.Handle("root-anchor", ref _rootAnchor, _model.Bounds);
-            _model.Draw(_rootAnchor.ToMatrix(), new Color(0, 0, 1));
-
             // Render Items
             //
-            Hierarchy.Push(_rootAnchor.ToMatrix());
             ItemDto itemToRemove = null;
             foreach(ItemDto item in App.ItemService.Items)
             {
+                // If spatial anchors are present and loaded, we will use the anchor as a root for the item.
+                // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the anchor root.
+                var useAnchorRoot = item.SpatialAnchor != null && item.SpatialAnchor.IsLoaded;
+				if (useAnchorRoot)
+                {
+                    Hierarchy.Push(item.SpatialAnchor.Pose.ToMatrix());
+                }
+
                 if (UI.Handle(item.Id.ToString(), ref item.Pose, _model.Bounds))
                 {
                     // TODO this could be made more efficient by only updating once the UI handle is released
@@ -103,11 +102,16 @@ namespace ARInventory
                 Vec3 textPosition = item.Pose.position;
                 textPosition.y += 10 * U.cm;
 
-                Quat inverseRootOrientation = _rootAnchor.orientation.Inverse;
-                Quat textLookAtOrientation  = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
-                Quat textOrientation = inverseRootOrientation * textLookAtOrientation;
+				Quat textOrientation = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
 
-                Matrix textTransform = Matrix.TR(textPosition, textOrientation);
+                // Correct the text angle to remove rotation from the anchor
+                if (useAnchorRoot)
+                {
+				    Quat inverseRootOrientation = item.SpatialAnchor.Pose.orientation.Inverse;
+					textOrientation = inverseRootOrientation * textOrientation;
+				}
+
+				Matrix textTransform = Matrix.TR(textPosition, textOrientation);
                 Text.Add(item.Title, textTransform, Color.Black);
 
                 if (App.ItemService.FocusedItem == item)
@@ -129,9 +133,16 @@ namespace ARInventory
                     {
                         itemToRemove = item;
                     }
-                    UI.WindowEnd();
+                    UI.Label($"Anchored: {item.SpatialAnchor != null}");
+                    UI.Label($"Anchor Loaded: {item.SpatialAnchor != null && item.SpatialAnchor.IsLoaded}");
+					UI.WindowEnd();
                 }
-            }
+
+				if (useAnchorRoot)
+				{
+                    Hierarchy.Pop();
+				}
+			}
             
             // We must remove the item from the list while outside of the foreach loop.
             // A collection cannot be modified while being enumerated!
@@ -163,7 +174,6 @@ namespace ARInventory
                     }
                 }
             }
-            Hierarchy.Pop();
 
         }
 
@@ -171,7 +181,13 @@ namespace ARInventory
         {
             foreach (var item in items)
             {
-                Bounds itemBounds = new Bounds(Hierarchy.ToWorld(item.Pose.position), _model.Bounds.dimensions);
+                var center = item.Pose.position;
+
+                // Adjust to anchor space if available
+                if (item.SpatialAnchor != null && item.SpatialAnchor.IsLoaded)
+                    center = Matrix.T(item.SpatialAnchor.Pose.position) * center;
+
+				Bounds itemBounds = new Bounds(center, _model.Bounds.dimensions);
                 if (anyFingerTipTouching(itemBounds, leftHand, rightHand))
                 {
                     return item;
@@ -221,12 +237,18 @@ namespace ARInventory
         {
             // This new item will appear directly in front of user's head
             var newItemPosition = Input.Head.position + Input.Head.Forward * 0.5f;
+            var anchor = App.SpatialEntity.CreateAnchor(new Pose(newItemPosition, Quat.Identity));
+
+            if (anchor == null)
+                throw new Exception("Error creating new item. Cannot create a new anchor.");
+
             var newItemDto = new ItemDto
             {
                 Id = Guid.NewGuid(),
-                Pose = new Pose(newItemPosition, Quat.Identity),
+                Pose = Pose.Identity,
                 Title = "NEW ITEM",
-                Quantity = 1
+                Quantity = 1,
+                SpatialAnchor = anchor
             };
 
             Controller.AddItem(newItemDto);

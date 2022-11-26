@@ -28,9 +28,13 @@ namespace ARInventory
 
         public void Step()
         {
-            UI.WindowBegin("Log", ref windowPose, windowSize);
-            UI.Text(logText);
-            UI.WindowEnd();
+            if (App.DEBUG_ON)
+            {
+                // Display logs in XR window
+                UI.WindowBegin("Log", ref windowPose, windowSize);
+                UI.Text(logText);
+                UI.WindowEnd();
+            }
         }
 
         private void onLog(LogLevel level, string text)

@@ -46,8 +46,11 @@ namespace ARInventory
             SK.AddStepper<Search>();
             SK.AddStepper<Minimap>();
 
-            SK.AddStepper<DebugWindow>();
-            SK.AddStepper<DebugFBSpatialEntity>();
+            if (DEBUG_ON)
+            {
+                SK.AddStepper<DebugWindow>();
+                SK.AddStepper<DebugFBSpatialEntity>();
+            }
 		}
         
         public void Step()

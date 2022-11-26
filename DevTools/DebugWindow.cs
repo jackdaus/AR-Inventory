@@ -54,6 +54,10 @@ namespace ARInventory
             {
                 testContext();
             }
+			if (UI.Button("Test: Load all items from db"))
+			{
+				App.ItemService.ReloadItemsFromStorage();
+			}
 			if (UI.Button("Test: Clean db"))
 			{
                 var allItems = App.Context.Items.ToList();

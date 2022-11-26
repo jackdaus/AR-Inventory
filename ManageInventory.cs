@@ -11,7 +11,7 @@ namespace ARInventory
 {
     /// <summary>
     /// Manages the UI for edditing the inventory items.
-    /// Responsible for rendering the items.
+    /// Also responsible for rendering the items.
     /// </summary>
     internal class ManageInventory : IStepper
     {
@@ -60,31 +60,21 @@ namespace ARInventory
             }
 
             if (UI.Button("New item"))
-            {
                 createNewItem();
-            }
 
-            if (UI.Button("Load all items"))
-            {
-                App.ItemService.ReloadItemsFromStorage();
-            }
-
-            UI.WindowEnd();
+			UI.WindowEnd();
 
 
             // Render Items
             //
             foreach(ItemDto item in App.ItemService.Items.ToList())
             {
-                // Try to get spatial anchor for the item
-                Anchor anchor = null;
-                if (item.SpatialAnchorUuid != null)
-				    App.SpatialEntity.Anchors.TryGetValue(item.SpatialAnchorUuid.Value, out anchor);
+				// Try to get spatial anchor for the item
+                Anchor anchor = tryGetSpatialAnchor(item);
 
                 // If spatial anchors are present and loaded, we will use the anchor as a root for the item.
                 // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the
                 // anchor root (mostly for dev purposes)
-
 				if (anchor != null)
                     Hierarchy.Push(anchor.Pose.ToMatrix());
 
@@ -139,7 +129,7 @@ namespace ARInventory
                     if (App.DEBUG_ON)
                     {
                         UI.Label($"Anchored: {item.SpatialAnchorUuid != null}");
-                        UI.Label($"Anchor Loaded: {anchor!= null}");
+                        UI.Label($"Anchor Loaded: {anchor != null}");
                     }
 					UI.WindowEnd();
                 }
@@ -154,10 +144,26 @@ namespace ARInventory
             if (App.ItemService.FocusedItem == null)
             {
                 App.ItemService.FocusedItem = firstItemTouchedByFinger(App.ItemService.Items, lHand, rHand);
-            }
-            else
+                if (App.ItemService.FocusedItem != null)
+				    Sound.Click.Play(App.ItemService.FocusedItem.Pose.position); // TODO adjust to anchor space
+			}
+			else
             {
-                Bounds focusedItemBounds = new Bounds(Hierarchy.ToWorld(App.ItemService.FocusedItem.Pose.position), _model.Bounds.dimensions);
+				var center = App.ItemService.FocusedItem.Pose.position;
+
+				// Try to get spatial anchor for the item
+				Anchor anchor = tryGetSpatialAnchor(App.ItemService.FocusedItem);
+
+                // Adjust to anchor space if available
+                if (anchor != null)
+                    center = anchor.Pose.ToMatrix() * center;
+
+				Bounds focusedItemBounds = new Bounds(center, _model.Bounds.dimensions);
+
+                // Draw intersection bounds in red
+                if(App.DEBUG_ON)
+                    _model.Draw(Matrix.T(focusedItemBounds.center), new Color(1, 0, 0));
+
                 bool stillTouchingFocusedItem = anyFingerTipTouching(focusedItemBounds, lHand, rHand);
 
                 if (!stillTouchingFocusedItem)
@@ -167,7 +173,7 @@ namespace ARInventory
                     {
                         // Touching a different item this frame. Make it the new focused item and make a sound
                         App.ItemService.FocusedItem = touchedItem;
-                        Sound.Click.Play(Hierarchy.ToWorld(touchedItem.Pose.position));
+                        Sound.Click.Play(center);
                     }
                 }
             }
@@ -181,16 +187,19 @@ namespace ARInventory
                 var center = item.Pose.position;
 
 				// Try to get spatial anchor for the item
-				Anchor anchor = null;
-				if (item.SpatialAnchorUuid != null)
-					App.SpatialEntity.Anchors.TryGetValue(item.SpatialAnchorUuid.Value, out anchor);
+				Anchor anchor = tryGetSpatialAnchor(item);
 
 				// Adjust to anchor space if available
 				if (anchor != null)
-                    center = Matrix.T(anchor.Pose.position) * center;
+                    center = anchor.Pose.ToMatrix() * center;
 
 				Bounds itemBounds = new Bounds(center, _model.Bounds.dimensions);
-                if (anyFingerTipTouching(itemBounds, leftHand, rightHand))
+
+                // Draw intersection bounds in green
+                if (App.DEBUG_ON)
+				    _model.Draw(Matrix.T(itemBounds.center), new Color(0, 1, 0));
+
+				if (anyFingerTipTouching(itemBounds, leftHand, rightHand))
                 {
                     return item;
                 }
@@ -208,8 +217,7 @@ namespace ARInventory
         /// <returns></returns>
         private bool anyFingerTipTouching(Bounds bounds, Hand leftHand, Hand rightHand)
         {
-            // Only consider tracked hands.
-            // Untracked hands can still have a position, even if not visible!
+            // Only consider tracked hands. Untracked hands can still have a position, even if not visible!
             if (rightHand.IsTracked)
             {
                 // Loop over all 5 fingers
@@ -265,5 +273,14 @@ namespace ARInventory
             App.ItemService.Items.Add(newItemDto);
             App.ItemService.FocusedItem = newItemDto;
         }
+
+        private Anchor tryGetSpatialAnchor(ItemDto item)
+        {
+			Anchor anchor = null;
+			if (item.SpatialAnchorUuid != null)
+				App.SpatialEntity.Anchors.TryGetValue(item.SpatialAnchorUuid.Value, out anchor);
+
+            return anchor;
+		}
     }
 }

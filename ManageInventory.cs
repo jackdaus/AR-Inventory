@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static SpatialEntity.SpatialEntityFBExt;
 
 namespace ARInventory
 {
@@ -75,24 +76,21 @@ namespace ARInventory
             //
             foreach(ItemDto item in App.ItemService.Items.ToList())
             {
+                // Try to get spatial anchor for the item
+                Anchor anchor = null;
+                if (item.SpatialAnchorUuid != null)
+				    App.SpatialEntity.Anchors.TryGetValue(item.SpatialAnchorUuid.Value, out anchor);
+
                 // If spatial anchors are present and loaded, we will use the anchor as a root for the item.
                 // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the
-                // anchor root... mostly for dev purposes
-				if (item.SpatialAnchorIsValid)
-                    Hierarchy.Push(item.SpatialAnchor.Pose.ToMatrix());
+                // anchor root (mostly for dev purposes)
+
+				if (anchor != null)
+                    Hierarchy.Push(anchor.Pose.ToMatrix());
 
                 // Update location data in persistent storage
                 if (UI.Handle(item.Id.ToString(), ref item.Pose, _model.Bounds))
                     Controller.UpdateItem(item); // TODO this could be made more efficient by only updating once the UI handle is released
-
-				// Update anchor Id in persistent storage. We do this here because the anchor Uuid creation is async! 
-				// So we here we're checking to see if the item's anchor might have been created/changed since the 
-				// last Step.
-				if (item.SpatialAnchorIsValid && item.SpatialAnchor.Uuid != item.SpatialAnchorUuid)
-                {
-                    item.SpatialAnchorUuid = item.SpatialAnchor.Uuid;
-                    Controller.UpdateItem(item);
-                }
 
                 // Highlight the item if it's the search result
                 Color modelColor = App.ItemService.SearchedItem == item ? new Color(1,0,0) : Color.White;
@@ -109,9 +107,9 @@ namespace ARInventory
 				Quat textOrientation = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
 
                 // Correct the text angle to remove rotation from the anchor
-                if (item.SpatialAnchorIsValid)
+                if (anchor != null)
                 {
-				    Quat inverseRootOrientation = item.SpatialAnchor.Pose.orientation.Inverse;
+				    Quat inverseRootOrientation = anchor.Pose.orientation.Inverse;
 					textOrientation = inverseRootOrientation * textOrientation;
 				}
 
@@ -138,12 +136,15 @@ namespace ARInventory
 						Controller.DeleteItem(item.Id);
 						App.ItemService.Items.Remove(item);
 					}
-                    UI.Label($"Anchored: {item.SpatialAnchor != null}");
-                    UI.Label($"Anchor Loaded: {item.SpatialAnchor != null && item.SpatialAnchor.IsLoaded}");
+                    if (App.DEBUG_ON)
+                    {
+                        UI.Label($"Anchored: {item.SpatialAnchorUuid != null}");
+                        UI.Label($"Anchor Loaded: {anchor!= null}");
+                    }
 					UI.WindowEnd();
                 }
 
-				if (item.SpatialAnchorIsValid)
+				if (anchor != null)
                     Hierarchy.Pop();
 			}
            
@@ -179,9 +180,14 @@ namespace ARInventory
             {
                 var center = item.Pose.position;
 
-                // Adjust to anchor space if available
-                if (item.SpatialAnchor != null && item.SpatialAnchor.IsLoaded)
-                    center = Matrix.T(item.SpatialAnchor.Pose.position) * center;
+				// Try to get spatial anchor for the item
+				Anchor anchor = null;
+				if (item.SpatialAnchorUuid != null)
+					App.SpatialEntity.Anchors.TryGetValue(item.SpatialAnchorUuid.Value, out anchor);
+
+				// Adjust to anchor space if available
+				if (anchor != null)
+                    center = Matrix.T(anchor.Pose.position) * center;
 
 				Bounds itemBounds = new Bounds(center, _model.Bounds.dimensions);
                 if (anyFingerTipTouching(itemBounds, leftHand, rightHand))
@@ -233,10 +239,7 @@ namespace ARInventory
         {
             // This new item will appear directly in front of user's head
             var newItemPosition = Input.Head.position + Input.Head.Forward * 0.5f;
-            var anchor = App.SpatialEntity.CreateAnchor(new Pose(newItemPosition, Quat.Identity));
-
-            if (anchor == null)
-                Log.Err("Error creating new item. Cannot create a new anchor.");
+            var newItemPose = new Pose(newItemPosition, Quat.Identity);
 
             var newItemDto = new ItemDto
             {
@@ -244,8 +247,19 @@ namespace ARInventory
                 Pose = Pose.Identity,
                 Title = "NEW ITEM",
                 Quantity = 1,
-                SpatialAnchor = anchor
             };
+
+            // The anchor id will be asynchronously set via a callback once it's finished being created
+            App.SpatialEntity.CreateAnchor(newItemPose, 
+                (Guid newId) =>
+                    {
+                        newItemDto.SpatialAnchorUuid = newId;
+                        // Save the item so the id persists in our db storage
+                        // NOTE: would be better if UpdateItem just set the anchor id... 
+                        // to avoid overwriting the Title in case it has since changed
+                        Controller.UpdateItem(newItemDto);
+                    },
+                () => newItemDto.SpatialAnchorCreateFailed = true);
 
             Controller.AddItem(newItemDto);
             App.ItemService.Items.Add(newItemDto);

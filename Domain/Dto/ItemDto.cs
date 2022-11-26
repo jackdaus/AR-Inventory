@@ -1,8 +1,5 @@
 ﻿using StereoKit;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using static SpatialEntity.SpatialEntityFBExt;
 
 namespace ARInventory
 {
@@ -10,11 +7,9 @@ namespace ARInventory
     {
         public Guid Id;
         public Pose Pose;
-        public Guid SpatialAnchorUuid;
-        public Anchor SpatialAnchor;
+        public Guid? SpatialAnchorUuid;
+        public bool SpatialAnchorCreateFailed;
 		public string Title;
         public int Quantity;
-
-        public bool SpatialAnchorIsValid => SpatialAnchor != null && SpatialAnchor.IsLoaded;
     }
 }

@@ -19,12 +19,8 @@ namespace SpatialEntity
 
 		public class Anchor
 		{
-			public XrAsyncRequestIdFB RequestId; // TODO preobably remove this>?
-			public Guid Uuid; // TODO probably remove this?
 			public XrSpace XrSpace;
 			public Pose Pose;
-			public bool IsLoaded; // TODO probably remove this?
-			public bool LoadFailed;
 			public bool LocateSuccess;
 		}
 
@@ -91,23 +87,45 @@ namespace SpatialEntity
 
 		}
 
-		/// <summary>
-		/// Initiates the creation of a spatial anchor in the Quest system.
-		/// Returns an Anchor that will be asynchronouly loaded. Check Anchor.IsLoaded to 
-		/// see if the anchor has been loaded.
-		/// Returns null if there was an error initiating the request to creat a new anchor.
-		/// </summary>
-		/// <param name="pose"></param>
-		/// <returns></returns>
-		public Anchor CreateAnchor(Pose pose)
+
+		// Create Anchor
+		//
+		public delegate void OnCreateSuccessDel(Guid newAnchorUuid);
+		public delegate void OnCreateErrorDel();
+
+		private Dictionary<XrAsyncRequestIdFB, CreateCallback> _createCallbacks = new Dictionary<XrAsyncRequestIdFB, CreateCallback>();
+
+		private class CreateCallback
 		{
-			if(!Enabled)
+			public OnCreateSuccessDel OnSuccess;
+			public OnCreateErrorDel   OnError;
+		}
+
+		public void LoadAllAnchors()
+		{
+			XrSpaceQueryInfoFB queryInfo = new XrSpaceQueryInfoFB(dummy: false);
+			XrResult result = xrQuerySpacesFB(Backend.OpenXR.Session, queryInfo, out XrAsyncRequestIdFB requestId);
+			if (result != XrResult.Success)
+				Log.Err($"Error querying anchors! Result: {result}");
+		}
+
+		/// <summary>
+		/// Create a spatial anchor at the given pose! This is an asynchronous action. You can optionally provide
+		/// some callbacks for when the action completes (either success or fail). 
+		/// </summary>
+		/// <param name="pose">The pose where the new anchor should be created.</param>
+		/// <param name="onSuccessCallback">The action to be performed when the anchor is successfully created. This is a delegate that has one Guid parameter (the new anchor id).</param>
+		/// <param name="onErrorCallback">The action to perform when the create anchor fails. This is a delegate with no parameters.</param>
+		/// <returns></returns>
+		public bool CreateAnchor(Pose pose, OnCreateSuccessDel onSuccessCallback = null, OnCreateErrorDel onErrorCallback = null)
+		{
+			Log.Info("Begin CreateAnchor");
+
+			if (!Enabled)
 			{
 				Log.Err("Spatial entity extension must be enabled before calling CreateAnchor!");
-				return null;
+				return false;
 			}
-
-			Log.Info("Begin CreateAnchor");
 
 			XrSpatialAnchorCreateInfoFB anchorCreateInfo = new XrSpatialAnchorCreateInfoFB(Backend.OpenXR.Space, pose, Backend.OpenXR.Time);
 
@@ -119,34 +137,24 @@ namespace SpatialEntity
 			if (result != XrResult.Success)
 			{
 				Log.Err($"Error requesting creation of spatial anchor: {result}");
-				return null;
+				return false;
 			}
-			
-			Log.Info($"xrCreateSpatialAnchorFB initiated. The request id is: {requestId}. Result: {result}");
 
-			// TODO 
+			Log.Info($"xrCreateSpatialAnchorFB initiated. The request id is: {requestId}.");
 
-			//var newAnchor = new Anchor()
-			//{
-			//	RequestId = requestId,
-			//	Pose = Pose.Identity,
-			//	IsLoaded = false
-			//};
-			//Anchors.Add(newAnchor);
 
-			//return newAnchor;
-			return null;
+			var createCallback = new CreateCallback
+			{
+				OnSuccess = onSuccessCallback,
+				OnError = onErrorCallback
+			};
+
+			_createCallbacks.Add(requestId, createCallback);
+
+			return true;
 		}
 
-		public void LoadAnchors()
-		{
-			XrSpaceQueryInfoFB queryInfo = new XrSpaceQueryInfoFB(dummy: false);
-			XrResult result = xrQuerySpacesFB(Backend.OpenXR.Session, queryInfo, out XrAsyncRequestIdFB requestId);
-			if (result != XrResult.Success)
-				Log.Err($"Error querying anchors! Result: {result}");
-		}
-
-		public void EraseAnchors()
+		public void EraseAllAnchors()
 		{
 			foreach(var anchor in Anchors.Values)
 			{
@@ -216,20 +224,29 @@ namespace SpatialEntity
 				case XrStructureType.XR_TYPE_EVENT_DATA_SPATIAL_ANCHOR_CREATE_COMPLETE_FB:
 					XrEventDataSpatialAnchorCreateCompleteFB spatialAnchorComplete = Marshal.PtrToStructure<XrEventDataSpatialAnchorCreateCompleteFB>(XrEventDataBufferData);
 
+					if (!_createCallbacks.TryGetValue(spatialAnchorComplete.requestId, out CreateCallback callack))
+					{
+						Log.Err($"Unable to find callback for the anchor create request with Id: {spatialAnchorComplete.requestId}!");
+						break;
+					}
+
 					if (spatialAnchorComplete.result != XrResult.Success)
 					{
 						Log.Err($"XrEventDataSpatialAnchorCreateCompleteFB error! Result: {spatialAnchorComplete.result}");
+						if (callack.OnError != null)
+							callack.OnError();
 						break;
 					}
 
 					var newCreatedAnchor = new Anchor
 					{
-						RequestId = spatialAnchorComplete.requestId,
 						XrSpace = spatialAnchorComplete.space,
-						Uuid = spatialAnchorComplete.uuid,
-						IsLoaded = true
 					};
+
 					Anchors.Add(spatialAnchorComplete.uuid, newCreatedAnchor);
+
+					if (callack.OnSuccess != null)
+						callack.OnSuccess(spatialAnchorComplete.uuid);
 
 					// When anchor is first created, the component STORABLE is not yet set. So we do it here.
 					if (isComponentSupported(spatialAnchorComplete.space, XrSpaceComponentTypeFB.XR_SPACE_COMPONENT_TYPE_STORABLE_FB))
@@ -262,8 +279,6 @@ namespace SpatialEntity
 							var newLoadedAnchor = new Anchor
 							{
 								XrSpace = setStatusComplete.space,
-								Uuid = setStatusComplete.uuid,
-								IsLoaded = true
 							};
 
 							Anchors.Add(setStatusComplete.uuid, newLoadedAnchor);

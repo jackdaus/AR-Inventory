@@ -22,6 +22,9 @@ namespace ARInventory
         public static SpatialEntityFBExt SpatialEntity;
         public static bool IsAndroid;
 
+        // Toggle some useful dev visuals
+        public const bool DEBUG_ON = false;
+
         public void Init()
         {
             floorMaterial = new Material(Shader.FromFile("floor.hlsl"));
@@ -33,10 +36,10 @@ namespace ARInventory
             // Start out with passthrough off
             Passthrough.EnabledPassthrough = false;
             
-            // Load anchors
+            // Load all system anchors (if feature is available)
             SpatialEntity.Enabled = true;
             if(SpatialEntity.Available)
-                SpatialEntity.LoadAnchors();
+                SpatialEntity.LoadAllAnchors();
 
             SK.AddStepper<Logger>();
             SK.AddStepper<ManageInventory>();

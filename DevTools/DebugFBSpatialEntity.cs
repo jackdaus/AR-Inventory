@@ -28,15 +28,14 @@ class DebugFBSpatialEntity : IStepper
 				Pose fingerPose = Input.Hand(Handed.Right)[FingerId.Index, JointId.Tip].Pose;
 				App.SpatialEntity.CreateAnchor(fingerPose);
 			}
+
 			if (UI.Button("Load Anchors"))
-			{
-				App.SpatialEntity.LoadAnchors();
-			}
+				App.SpatialEntity.LoadAllAnchors();
+
 			UI.Label($"Anchor count loaded: {App.SpatialEntity.Anchors.Count}");
+
 			if (UI.Button("Erase All Anchors"))
-			{
-				App.SpatialEntity.EraseAnchors();
-			}
+				App.SpatialEntity.EraseAllAnchors();
 		}
 
 		UI.WindowEnd();

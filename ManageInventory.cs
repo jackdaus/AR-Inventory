@@ -62,6 +62,9 @@ namespace ARInventory
             if (UI.Button("New item"))
                 createNewItem();
 
+            if (UI.Button("Quit"))
+                SK.Shutdown();
+
 			UI.WindowEnd();
 
 

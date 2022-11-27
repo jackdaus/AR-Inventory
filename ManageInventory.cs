@@ -256,8 +256,7 @@ namespace ARInventory
             {
                 Id = Guid.NewGuid(),
                 Pose = Pose.Identity,
-                Title = "NEW ITEM",
-                Quantity = 1,
+                Title = "NEW",
             };
 
             // The anchor id will be asynchronously set via a callback once it's finished being created

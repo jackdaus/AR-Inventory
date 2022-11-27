@@ -14,6 +14,8 @@ namespace ARInventory
         Tex      _renderTex;
         Mesh     _minimapMesh;
         Material _minimapMaterial;
+
+        Tex      _backgroundTex;
         Material _backgroundMaterial;
 
         public bool Initialize()
@@ -26,15 +28,20 @@ namespace ARInventory
             _minimapMaterial[MatParamName.DiffuseTex] = _renderTex;
             _minimapMaterial.FaceCull = Cull.None;
 
+            _minimapMaterial.Transparency = Transparency.Blend;
+            _minimapMaterial.DepthWrite = true; // This helps prevent the hands from rendering above the minimap
+            _minimapMaterial[MatParamName.ColorTint] = new Color(1, 1, 1, 0.5f);
+
             // TODO figure out why image is rotated and mirrored on .NET vs. Android? Temp fix below
             if (App.IsAndroid)
 			    _minimapMesh = Mesh.GenerateCircle(10 * U.cm, -Vec3.UnitZ, -Vec3.UnitY, 50);
             else
 				_minimapMesh = Mesh.GenerateCircle(10 * U.cm,  Vec3.UnitZ,  Vec3.UnitY, 50);
 
+            _backgroundTex = Tex.FromFile("minimap_background.jpg");
 			// TODO v0.3.7 use built-in blit shader
 			_backgroundMaterial = new Material(Shader.Find("default/shader_blit"));
-			_backgroundMaterial["source"] = Tex.Gray;
+			_backgroundMaterial["source"] = _backgroundTex;
 
 			return true;
         }
@@ -62,18 +69,18 @@ namespace ARInventory
             Hierarchy.Pop();
 
             // Camera is located 3m above user, looking down
-            Quat cameraOrientation = Quat.LookAt(Vec3.Zero, new Vec3(0, -1, 0));
+            Quat cameraOrientation = Quat.LookDir(-Vec3.UnitY);
             Vec3 cameraLocation    = Input.Head.position + Vec3.UnitY * 3 * U.m;
             Matrix camera          = Matrix.TR(cameraLocation, cameraOrientation);
 
             // Draw a background color
             Renderer.Blit(_renderTex, _backgroundMaterial);
 
-            // Orthographic projection of a 3m x 3m sqaure area Don't clear color
+            // Orthographic projection of a 5m x 5m sqaure area. Don't clear color
             // buffer, or else our background color will get overwritten with black!
             Renderer.RenderTo(_renderTex,
                 camera,
-                Matrix.Orthographic(3 * U.m, 3 * U.m, 0.01f, 100),
+                Matrix.Orthographic(5 * U.m, 5 * U.m, 0.01f, 100),
                 layerFilter: RenderLayer.Layer1, 
                 RenderClear.Depth);
         }

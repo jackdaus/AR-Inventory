@@ -90,8 +90,7 @@ namespace ARInventory
                 OrientationY = 0, 
                 OrientationZ = 0,
                 OrientationW = 1,
-                Title = "Towels",
-                Quantity = 1
+                Title = "Context test",
             });
 
             var isSuccessful = App.Context.SaveChanges();

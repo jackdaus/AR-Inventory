@@ -25,7 +25,6 @@ namespace ARInventory
             item.OrientationZ = itemDto.Pose.orientation.z;
             item.OrientationW = itemDto.Pose.orientation.w;
             item.Title = itemDto.Title;
-            item.Quantity = item.Quantity;
 
             App.Context.Items.Add(item);
             App.Context.SaveChanges();
@@ -43,7 +42,6 @@ namespace ARInventory
             item.OrientationZ = itemDto.Pose.orientation.z;
             item.OrientationW = itemDto.Pose.orientation.w;
             item.Title = itemDto.Title;
-            item.Quantity = item.Quantity;
 
             App.Context.Items.Update(item);
             App.Context.SaveChanges();

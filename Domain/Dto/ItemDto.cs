@@ -10,6 +10,5 @@ namespace ARInventory
         public Guid? SpatialAnchorUuid;
         public bool SpatialAnchorCreateFailed;
 		public string Title;
-        public int Quantity;
     }
 }

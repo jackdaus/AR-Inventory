@@ -17,7 +17,6 @@ namespace ARInventory
                 SpatialAnchorUuid = item.SpatialAnchorUuid,
                 Pose = new Pose(item.LocationX, item.LocationY, item.LocationZ, new Quat(item.OrientationX, item.OrientationY, item.OrientationZ, item.OrientationW)),
                 Title = item.Title,
-                Quantity = item.Quantity,
             })
             .AsQueryable();
         }

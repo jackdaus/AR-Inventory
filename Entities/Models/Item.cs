@@ -16,6 +16,5 @@ namespace ARInventory.Entities.Models
         public float OrientationZ { get; set; }
         public float OrientationW { get; set; }
         public string Title { get; set; }
-        public int Quantity { get; set; }
     }
 }

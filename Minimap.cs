@@ -26,9 +26,13 @@ namespace ARInventory
             _minimapMaterial[MatParamName.DiffuseTex] = _renderTex;
             _minimapMaterial.FaceCull = Cull.None;
 
-			_minimapMesh = Mesh.GenerateCircle(10 * U.cm, Vec3.UnitZ, Vec3.UnitY, 50);
+            // TODO figure out why image is rotated and mirrored on .NET vs. Android? Temp fix below
+            if (App.IsAndroid)
+			    _minimapMesh = Mesh.GenerateCircle(10 * U.cm, -Vec3.UnitZ, -Vec3.UnitY, 50);
+            else
+				_minimapMesh = Mesh.GenerateCircle(10 * U.cm,  Vec3.UnitZ,  Vec3.UnitY, 50);
 
-            // TODO v0.3.7 use built-in blit shader
+			// TODO v0.3.7 use built-in blit shader
 			_backgroundMaterial = new Material(Shader.Find("default/shader_blit"));
 			_backgroundMaterial["source"] = Tex.Gray;
 
@@ -65,9 +69,9 @@ namespace ARInventory
             // Draw a background color
             Renderer.Blit(_renderTex, _backgroundMaterial);
 
-			// Orthographic projection of a 3m x 3m sqaure area Don't clear color
-			// buffer, or else our background color will get overwritten with black!
-			Renderer.RenderTo(_renderTex,
+            // Orthographic projection of a 3m x 3m sqaure area Don't clear color
+            // buffer, or else our background color will get overwritten with black!
+            Renderer.RenderTo(_renderTex,
                 camera,
                 Matrix.Orthographic(3 * U.m, 3 * U.m, 0.01f, 100),
                 layerFilter: RenderLayer.Layer1, 

@@ -30,7 +30,7 @@ namespace ARInventory
 
             _minimapMaterial.Transparency = Transparency.Blend;
             _minimapMaterial.DepthWrite = true; // This helps prevent the hands from rendering above the minimap
-            _minimapMaterial[MatParamName.ColorTint] = new Color(1, 1, 1, 0.5f);
+            _minimapMaterial[MatParamName.ColorTint] = new Color(1, 1, 1, 0.7f);
 
             // TODO figure out why image is rotated and mirrored on .NET vs. Android? Temp fix below
             if (App.IsAndroid)
@@ -53,6 +53,9 @@ namespace ARInventory
 
         public void Step()
         {
+            if (!Enabled)
+                return;
+
             Pose rHandPalmPose = Input.Hand(Handed.Right).palm;
 
             // Minimap located 5 cm above user's hand

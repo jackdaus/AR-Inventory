@@ -30,13 +30,6 @@ namespace ARInventory
                 Mesh.GenerateRoundedCube(Vec3.One * 0.1f, 0.02f),
                 Default.MaterialUI);
 
-            SK.AddStepper(new HandMenuRadial(
-                new HandRadialLayer("Root",
-                    new HandMenuItem("New", null, () => createNewItem()),
-                    new HandMenuItem("About", null, () => Log.Info(SK.VersionName)),
-                    new HandMenuItem("Cancel", null, null))
-                ));
-
             return true;
         }
 
@@ -94,29 +87,26 @@ namespace ARInventory
                 _model.Draw(item.Pose.ToMatrix(), modelColor, layer: RenderLayer.Layer1);
 
                 // Item label floats 10cm above the object
-                Vec3 textPosition = item.Pose.position;
-                textPosition.y += 10 * U.cm;
+                Vec3 titlePosition = item.Pose.position;
+                titlePosition.y += 12 * U.cm;
 
-				Quat textOrientation = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
+				Quat titleOrientation = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
 
                 // Correct the text angle to remove rotation from the anchor
                 if (anchor != null)
                 {
 				    Quat inverseRootOrientation = anchor.Pose.orientation.Inverse;
-					textOrientation = inverseRootOrientation * textOrientation;
+					titleOrientation = inverseRootOrientation * titleOrientation;
 				}
-
-				Matrix textTransform = Matrix.TR(textPosition, textOrientation);
-                Text.Add(item.Title, textTransform, Color.Black);
 
                 if (App.ItemService.FocusedItem == item)
                 {
                     // TODO set UIBox scale to adjust to smaller/larger models
                     Mesh.Cube.Draw(Material.UIBox, item.Pose.ToMatrix(0.12f));
 
-                    textPosition.y += 8 * U.cm;
-                    _editWindowPose.position = textPosition;
-                    _editWindowPose.orientation = textOrientation;
+                    titlePosition.y += 0 * U.cm;
+                    _editWindowPose.position = titlePosition;
+                    _editWindowPose.orientation = titleOrientation;
 
                     UI.WindowBegin("edit-title-window", ref _editWindowPose, UIWin.Body);
                     if (UI.Input( "title-input", ref item.Title, _inputSize))
@@ -136,6 +126,13 @@ namespace ARInventory
                     }
 					UI.WindowEnd();
                 }
+                else
+                {
+					Pose titlePose = new Pose(titlePosition, titleOrientation);
+					UI.WindowBegin($"title-{item.Id}", ref titlePose, UIWin.Body);
+					UI.Label(item.Title);
+					UI.WindowEnd();
+				}
 
 				if (anchor != null)
                     Hierarchy.Pop();
@@ -182,6 +179,11 @@ namespace ARInventory
             }
 
         }
+
+        public void AddItem()
+        {
+            createNewItem();
+		}
 
         private ItemDto firstItemTouchedByFinger(List<ItemDto> items, Hand leftHand, Hand rightHand)
         {

@@ -1,6 +1,7 @@
 using ARInventory.Entities;
 using SpatialEntity;
 using StereoKit;
+using StereoKit.Framework;
 
 namespace ARInventory
 {
@@ -33,24 +34,33 @@ namespace ARInventory
             Context     = new EntityContext();
             ItemService = new ItemService();
 
-            // Start out with passthrough off
-            Passthrough.EnabledPassthrough = false;
+            // Start out with passthrough on
+            Passthrough.EnabledPassthrough = true;
             
             // Load all system anchors (if feature is available)
             SpatialEntity.Enabled = true;
             if(SpatialEntity.Available)
                 SpatialEntity.LoadAllAnchors();
 
+            var minimap         = SK.AddStepper<Minimap>();
+            minimap.Enabled = false;
+            var manageInventory = SK.AddStepper<ManageInventory>();
             SK.AddStepper<Logger>();
-            SK.AddStepper<ManageInventory>();
             SK.AddStepper<Search>();
-            SK.AddStepper<Minimap>();
 
             if (DEBUG_ON)
             {
                 SK.AddStepper<DebugWindow>();
                 SK.AddStepper<DebugFBSpatialEntity>();
             }
+
+            // Radial hand menu
+			SK.AddStepper(new HandMenuRadial(
+	            new HandRadialLayer("Root",
+		            new HandMenuItem("New",     null, () => manageInventory.AddItem()),
+		            new HandMenuItem("Minimap", null, () => minimap.Enabled = !minimap.Enabled),
+		            new HandMenuItem("Cancel",  null, null))
+	            ));
 		}
         
         public void Step()

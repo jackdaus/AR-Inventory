@@ -9,14 +9,18 @@ namespace ARInventory
     {
         internal static class Sprites
         {
-            internal static Sprite IconDown   { get; } = Sprite.FromFile("icons/outline_arrow_downward_white_24dp.png");
-            internal static Sprite IconUp     { get; } = Sprite.FromFile("icons/outline_arrow_upward_white_24dp.png");
-            internal static Sprite IconClear  { get; } = Sprite.FromFile("icons/outline_clear_white_24dp.png");
-            internal static Sprite IconClose  { get; } = Sprite.FromFile("icons/outline_close_white_24dp.png");
-            internal static Sprite IconDelete { get; } = Sprite.FromFile("icons/outline_delete_white_24dp.png");
-            internal static Sprite IconPower  { get; } = Sprite.FromFile("icons/outline_power_settings_new_white_24dp.png");
-            internal static Sprite IconEye    { get; } = Sprite.FromFile("icons/outline_visibility_white_24dp.png");
-        }
+            internal static Sprite Anchor      { get; } = Sprite.FromFile("icons/outline_anchor_white_24dp.png");
+            internal static Sprite IconDown    { get; } = Sprite.FromFile("icons/outline_arrow_downward_white_24dp.png");
+			internal static Sprite IconUp      { get; } = Sprite.FromFile("icons/outline_arrow_upward_white_24dp.png");
+            internal static Sprite IconClear   { get; } = Sprite.FromFile("icons/outline_clear_white_24dp.png");
+            internal static Sprite IconClose   { get; } = Sprite.FromFile("icons/outline_close_white_24dp.png");
+            internal static Sprite IconDelete  { get; } = Sprite.FromFile("icons/outline_delete_white_24dp.png");
+            internal static Sprite IconError   { get; } = Sprite.FromFile("icons/outline_error_white_24dp.png");
+            internal static Sprite IconInfo    { get; } = Sprite.FromFile("icons/outline_delete_white_24dp.png");
+			internal static Sprite IconPower   { get; } = Sprite.FromFile("icons/outline_power_settings_new_white_24dp.png");
+			internal static Sprite IconEye     { get; } = Sprite.FromFile("icons/outline_visibility_white_24dp.png");
+			internal static Sprite IconWarning { get; } = Sprite.FromFile("icons/outline_warning_white_24dp.png");
+		}
 
         internal static class Models
         {

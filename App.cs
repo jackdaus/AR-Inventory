@@ -42,11 +42,13 @@ namespace ARInventory
             if(SpatialEntity.Available)
                 SpatialEntity.LoadAllAnchors();
 
-            var minimap         = SK.AddStepper<Minimap>();
-            minimap.Enabled = false;
-            var manageInventory = SK.AddStepper<ManageInventory>();
             SK.AddStepper<Logger>();
             SK.AddStepper<Search>();
+
+            var manageInventory = SK.AddStepper<ManageInventory>();
+            var minimap         = SK.AddStepper<Minimap>();
+            minimap.Enabled = false;
+
 
             if (DEBUG_ON)
             {

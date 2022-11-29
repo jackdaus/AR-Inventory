@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static SpatialEntity.SpatialEntityFBExt;
 
 namespace ARInventory
 {
@@ -23,5 +24,13 @@ namespace ARInventory
             Items = Factory.GetItemDtos().ToList();
         }
 
-    }
+		public Anchor TryGetSpatialAnchor(ItemDto item)
+		{
+			Anchor anchor = null;
+			if (item.SpatialAnchorUuid != null)
+				App.SpatialEntity.Anchors.TryGetValue(item.SpatialAnchorUuid.Value, out anchor);
+
+			return anchor;
+		}
+	}
 }

@@ -24,11 +24,13 @@ namespace ARInventory
         Pose _editWindowPose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
         Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
 
+        TextStyle _largeTextStyle;
+
         public bool Initialize()
         {
-            _model = Model.FromMesh(
-                Mesh.GenerateRoundedCube(Vec3.One * 0.1f, 0.02f),
-                Default.MaterialUI);
+            _model = Model.FromMesh(Mesh.GenerateSphere(0.05f), Default.MaterialUI);
+
+            _largeTextStyle = Text.MakeStyle(Font.Default, 0.02f, Color.White);
 
             return true;
         }
@@ -66,7 +68,7 @@ namespace ARInventory
             foreach(ItemDto item in App.ItemService.Items.ToList())
             {
 				// Try to get spatial anchor for the item
-                Anchor anchor = tryGetSpatialAnchor(item);
+                Anchor anchor = App.ItemService.TryGetSpatialAnchor(item);
 
                 // If spatial anchors are present and loaded, we will use the anchor as a root for the item.
                 // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the
@@ -129,9 +131,18 @@ namespace ARInventory
                 else
                 {
 					Pose titlePose = new Pose(titlePosition, titleOrientation);
+                    UI.EnableFarInteract = false;
 					UI.WindowBegin($"title-{item.Id}", ref titlePose, UIWin.Body);
+                    UI.PushTextStyle(_largeTextStyle);
 					UI.Label(item.Title);
-					UI.WindowEnd();
+                    UI.PopTextStyle();
+
+                    // Display warning icon if anchor cannot be found
+                    if (anchor == null)
+                        Catalog.Sprites.IconWarning.Draw(Matrix.TS(Vec3.Forward * 0.001f, 0.05f), TextAlign.BottomCenter, new Color(1, 0.8f, 0));
+					
+                    UI.WindowEnd();
+					UI.EnableFarInteract = true;
 				}
 
 				if (anchor != null)
@@ -152,7 +163,7 @@ namespace ARInventory
 				var center = App.ItemService.FocusedItem.Pose.position;
 
 				// Try to get spatial anchor for the item
-				Anchor anchor = tryGetSpatialAnchor(App.ItemService.FocusedItem);
+				Anchor anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.FocusedItem);
 
                 // Adjust to anchor space if available
                 if (anchor != null)
@@ -192,7 +203,7 @@ namespace ARInventory
                 var center = item.Pose.position;
 
 				// Try to get spatial anchor for the item
-				Anchor anchor = tryGetSpatialAnchor(item);
+				Anchor anchor = App.ItemService.TryGetSpatialAnchor(item);
 
 				// Adjust to anchor space if available
 				if (anchor != null)
@@ -277,14 +288,5 @@ namespace ARInventory
             App.ItemService.Items.Add(newItemDto);
             App.ItemService.FocusedItem = newItemDto;
         }
-
-        private Anchor tryGetSpatialAnchor(ItemDto item)
-        {
-			Anchor anchor = null;
-			if (item.SpatialAnchorUuid != null)
-				App.SpatialEntity.Anchors.TryGetValue(item.SpatialAnchorUuid.Value, out anchor);
-
-            return anchor;
-		}
     }
 }

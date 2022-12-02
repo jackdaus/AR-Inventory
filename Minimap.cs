@@ -79,11 +79,11 @@ namespace ARInventory
             // Draw a background color
             Renderer.Blit(_renderTex, _backgroundMaterial);
 
-            // Orthographic projection of a 5m x 5m sqaure area. Don't clear color
+            // Orthographic projection of a 3m x 3m sqaure area. Don't clear color
             // buffer, or else our background color will get overwritten with black!
             Renderer.RenderTo(_renderTex,
                 camera,
-                Matrix.Orthographic(5 * U.m, 5 * U.m, 0.01f, 100),
+                Matrix.Orthographic(3 * U.m, 3 * U.m, 0.01f, 100),
                 layerFilter: RenderLayer.Layer1, 
                 RenderClear.Depth);
         }

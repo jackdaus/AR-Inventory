@@ -9,9 +9,9 @@ namespace ARInventory
 {
     public class Search : IStepper
     {
-        private Pose _menuPose = new Pose(0, 0.2f, -0.4f, Quat.LookDir(0, 0, 1));
+        private Pose   _menuPose    = new Pose(0, 0.2f, -0.4f, Quat.LookDir(0, 0, 1));
+        private Vec2   _inputSize   = new Vec2(15 * U.cm, 3 * U.cm);
         private String _searchInput = String.Empty;
-        private Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
 
         public bool Enabled { get; set; }
 
@@ -69,5 +69,10 @@ namespace ARInventory
 				Lines.Add(p2, p3, new Color(1, 0, 0), 0.01f);
 			}
         }
-    }
+
+        public void TeleportMenu(Pose pose)
+        {
+            _menuPose = pose;
+        }
+	}
 }

@@ -1,3 +1,4 @@
+using ARInventory.DevTools;
 using ARInventory.Entities;
 using SpatialEntity;
 using StereoKit;
@@ -24,7 +25,7 @@ namespace ARInventory
         public static bool IsAndroid;
 
         // Toggle some useful dev visuals
-        public const bool DEBUG_ON = false;
+        public static bool DEBUG_ON = false;
 
         public void Init()
         {
@@ -42,26 +43,29 @@ namespace ARInventory
             if(SpatialEntity.Available)
                 SpatialEntity.LoadAllAnchors();
 
+
+            // Initialize Steppers
+			ManageInventory manageInventory = SK.AddStepper<ManageInventory>();
+			Minimap         minimap         = SK.AddStepper<Minimap>();
+			Search          search          = SK.AddStepper<Search>();
+            
             SK.AddStepper<Logger>();
-            SK.AddStepper<Search>();
-
-            var manageInventory = SK.AddStepper<ManageInventory>();
-            var minimap         = SK.AddStepper<Minimap>();
-            minimap.Enabled = false;
-
-
-            if (DEBUG_ON)
-            {
-                SK.AddStepper<DebugWindow>();
-                SK.AddStepper<DebugFBSpatialEntity>();
-            }
+            SK.AddStepper<DebugWindow>();
+            SK.AddStepper<DebugFBSpatialEntity>();
 
             // Radial hand menu
 			SK.AddStepper(new HandMenuRadial(
 	            new HandRadialLayer("Root",
-		            new HandMenuItem("New",     null, () => manageInventory.AddItem()),
-		            new HandMenuItem("Minimap", null, () => minimap.Enabled = !minimap.Enabled),
-		            new HandMenuItem("Cancel",  null, null))
+		            new HandMenuItem("", Catalog.Sprites.IconAdd,    () => manageInventory.AddItem()),
+		            new HandMenuItem("", Catalog.Sprites.IconRadar,  () => minimap.Enabled = !minimap.Enabled),
+		            new HandMenuItem("", Catalog.Sprites.IconSearch, () =>
+                    {
+                        Vec3 position    = Input.Head.position + Input.Head.Forward * 50 * U.cm;
+                        Quat orientation = Quat.LookAt(position, Input.Head.position);
+						search.TeleportMenu(new Pose(position, orientation));
+                    }),
+					new HandMenuItem("", Catalog.Sprites.IconBug, () => DEBUG_ON = !DEBUG_ON),
+					new HandMenuItem("Cancel",  null, null))
 	            ));
 		}
         

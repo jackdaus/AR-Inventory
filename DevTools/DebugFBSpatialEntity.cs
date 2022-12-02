@@ -13,6 +13,9 @@ class DebugFBSpatialEntity : IStepper
 
 	public void Step()
 	{
+		if (!App.DEBUG_ON)
+			return;
+
 		UI.WindowBegin("Spatial Entity Debug", ref windowPose);
 
 		if (!App.SpatialEntity.Available)

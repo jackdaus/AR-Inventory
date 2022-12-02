@@ -9,7 +9,6 @@ namespace ARInventory.Entities
     /// <summary>
     /// Access to the persistence layer.
     /// </summary>
-    // TODO are there tread saftey concerns here? Do I need to implement a thread safe singelton pattern?
     public class EntityContext
     {
         public EntitySet<Item> Items => _entities.Items;

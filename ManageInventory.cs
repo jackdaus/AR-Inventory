@@ -123,8 +123,7 @@ namespace ARInventory
 					}
                     if (App.DEBUG_ON)
                     {
-                        UI.Label($"Anchored: {item.SpatialAnchorUuid != null}");
-                        UI.Label($"Anchor Loaded: {anchor != null}");
+                        UI.Label($"Has SpatialAnchorUuid: {item.SpatialAnchorUuid != null}");
                     }
 					UI.WindowEnd();
                 }
@@ -172,7 +171,7 @@ namespace ARInventory
 				Bounds focusedItemBounds = new Bounds(center, _model.Bounds.dimensions);
 
                 // Draw intersection bounds in red
-                if(App.DEBUG_ON)
+                if (App.DEBUG_ON)
                     _model.Draw(Matrix.T(focusedItemBounds.center), new Color(1, 0, 0));
 
                 bool stillTouchingFocusedItem = anyFingerTipTouching(focusedItemBounds, lHand, rHand);

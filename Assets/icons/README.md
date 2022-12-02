@@ -1,5 +1,5 @@
 ﻿# If you need a new Icon, find and download one from Google's Material Icons! 
-https://fonts.google.com/icons?icon.query=up&icon.set=Material+Icons
+https://fonts.google.com/icons?icon.set=Material+Icons
 
 # Guidlines for Adding New Icons
 1.	Prefer Material Icons over Material Symbols

@@ -11,7 +11,7 @@ namespace ARInventory
 {
     public class DebugWindow : IStepper
     {
-        private Pose menuPose = new Pose(0.4f, -0.1f, -0.4f, Quat.LookDir(-1, 0, 1));
+        private Pose _menuPose = new Pose(0.4f, -0.1f, -0.4f, Quat.LookDir(-1, 0, 1));
 
         public bool Enabled { get; set; }
 
@@ -26,7 +26,10 @@ namespace ARInventory
 
         public void Step()
         {
-            UI.WindowBegin("Test Window", ref menuPose);
+            if (!App.DEBUG_ON)
+                return;
+
+            UI.WindowBegin("Test Window", ref _menuPose);
             if (UI.Button("Test write file"))
             {
                 var appDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);

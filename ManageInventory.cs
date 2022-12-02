@@ -120,6 +120,10 @@ namespace ARInventory
                     {
 						Controller.DeleteItem(item.Id);
 						App.ItemService.Items.Remove(item);
+                        if (App.ItemService.SearchedItem == item)
+                        {
+                            App.ItemService.SearchedItem = null;
+                        }
 					}
                     if (App.DEBUG_ON)
                     {

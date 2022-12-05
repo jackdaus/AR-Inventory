@@ -64,9 +64,10 @@ namespace ARInventory
 				Vec3 p2 = new Vec3(itemPoseMatrix.Translation.x, p0.y, itemPoseMatrix.Translation.z);
 				Vec3 p3 = itemPoseMatrix.Translation;
 
-				Lines.Add(p0, p1, new Color(1, 0, 0), 0.01f);
-				Lines.Add(p1, p2, new Color(1, 0, 0), 0.01f);
-				Lines.Add(p2, p3, new Color(1, 0, 0), 0.01f);
+                Color color = new Color(0, 1, 1);
+				Lines.Add(p0, p1, color, 0.005f);
+				Lines.Add(p1, p2, color, 0.005f);
+				Lines.Add(p2, p3, color, 0.005f);
 			}
         }
 

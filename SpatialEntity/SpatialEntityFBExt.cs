@@ -361,7 +361,7 @@ namespace SpatialEntity
 							// be added to the application's Anchor list!
 						}
 
-						// Set component SORTABLE
+						// Set component STORABLE
 						if (isComponentSupported(res.space, XrSpaceComponentTypeFB.XR_SPACE_COMPONENT_TYPE_STORABLE_FB))
 						{
 							XrSpaceComponentStatusSetInfoFB setComponentInfo = new XrSpaceComponentStatusSetInfoFB(XrSpaceComponentTypeFB.XR_SPACE_COMPONENT_TYPE_STORABLE_FB, true);

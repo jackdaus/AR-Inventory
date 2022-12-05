@@ -30,7 +30,7 @@ namespace ARInventory
 
             _minimapMaterial.Transparency = Transparency.Blend;
             _minimapMaterial.DepthWrite = true; // This helps prevent the hands from rendering above the minimap
-            _minimapMaterial[MatParamName.ColorTint] = new Color(1, 1, 1, 0.7f);
+            _minimapMaterial[MatParamName.ColorTint] = new Color(1, 1, 1, 0.95f);
 
             // TODO figure out why image is rotated and mirrored on .NET vs. Android? Temp fix below
             if (App.IsAndroid)
@@ -79,12 +79,12 @@ namespace ARInventory
             // Draw a background color
             Renderer.Blit(_renderTex, _backgroundMaterial);
 
-            // Orthographic projection of a 3m x 3m sqaure area. Don't clear color
+            // Orthographic projection of a 4m x 4m sqaure area. Don't clear color
             // buffer, or else our background color will get overwritten with black!
             Renderer.RenderTo(_renderTex,
                 camera,
-                Matrix.Orthographic(3 * U.m, 3 * U.m, 0.01f, 100),
-                layerFilter: RenderLayer.Layer1, 
+                Matrix.Orthographic(4 * U.m, 4 * U.m, 0.01f, 100),
+                layerFilter: RenderLayer.ThirdPerson, 
                 RenderClear.Depth);
         }
     }

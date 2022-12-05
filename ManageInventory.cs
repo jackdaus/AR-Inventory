@@ -20,19 +20,29 @@ namespace ARInventory
         Pose _pose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
         
         Model _model;
+        Model _shellModel;
+
+        Material _shellMaterial;
 
         Pose _editWindowPose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
         Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
 
-        TextStyle _largeTextStyle;
+
+		TextStyle _largeTextStyle;
 
         public bool Initialize()
         {
-            _model = Model.FromMesh(Mesh.GenerateSphere(0.05f), Default.MaterialUI);
-
             _largeTextStyle = Text.MakeStyle(Font.Default, 0.02f, Color.White);
 
-            return true;
+            // The shell material has transparency. So we set that up here.
+			_shellMaterial = Material.Default.Copy();
+			_shellMaterial.Transparency = Transparency.Blend;
+			_shellMaterial.DepthWrite = false;
+
+            _model      = Model.FromMesh(Mesh.GenerateSphere(0.05f), Default.MaterialUI);
+			_shellModel = Model.FromMesh(Mesh.GenerateSphere(0.2f), _shellMaterial);
+
+			return true;
         }
 
         public void Shutdown()
@@ -78,18 +88,26 @@ namespace ARInventory
 
                 // Update location data in persistent storage
                 if (UI.Handle(item.Id.ToString(), ref item.Pose, _model.Bounds))
-                    Controller.UpdateItem(item); // TODO this could be made more efficient by only updating once the UI handle is released
+                    Controller.UpdateItem(item); // TODO this could be made more efficient by only updating once the UI handle is released. Or maybe setting a throttle (if network connected, for real-time collab)
 
-                // Highlight the item if it's the search result
-                Color modelColor = App.ItemService.SearchedItem == item ? new Color(1,0,0) : Color.White;
+                // Highlight the item if it's the search result. Shell color is a bit transparent.
+                Color modelColor = App.ItemService.SearchedItem == item ? new Color(0, 1, 1) : Color.White;
 
-                // Draw the items to Layer1, which will be used to render the Minimap.
-                // We don't want to render the menus and other UI in the Minimap, just
-                // the items. So rendering to a specific layer is the solution!
-                _model.Draw(item.Pose.ToMatrix(), modelColor, layer: RenderLayer.Layer1);
+                // Shell color is same as model color, but alpha = 0.1
+                Color shellColor = modelColor;
+                shellColor.a = 0.2f;
 
-                // Item label floats 10cm above the object
-                Vec3 titlePosition = item.Pose.position;
+				// Draw the items!
+				_model.Draw(item.Pose.ToMatrix(), modelColor);
+
+                // For the minimap! We draw the model again as well as the shell. Making sure to specify
+                // RenderLayer.ThirdPerson, since this is what the minimap is going off of.
+                float size = App.ItemService.SearchedItem == item ? 2 : 1;
+				_model.Draw     (item.Pose.ToMatrix(size), modelColor, layer: RenderLayer.ThirdPerson);
+				_shellModel.Draw(item.Pose.ToMatrix(size), shellColor, layer: RenderLayer.ThirdPerson);
+
+				// Item label floats 10cm above the object
+				Vec3 titlePosition = item.Pose.position;
                 titlePosition.y += 12 * U.cm;
 
 				Quat titleOrientation = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
@@ -127,7 +145,7 @@ namespace ARInventory
 					}
                     if (App.DEBUG_ON)
                     {
-                        UI.Label($"Has SpatialAnchorUuid: {item.SpatialAnchorUuid != null}");
+                        UI.Label($"SpatialAnchorUuid: {item.SpatialAnchorUuid}");
                     }
 					UI.WindowEnd();
                 }
@@ -176,7 +194,9 @@ namespace ARInventory
 
                 // Draw intersection bounds in red
                 if (App.DEBUG_ON)
-                    _model.Draw(Matrix.T(focusedItemBounds.center), new Color(1, 0, 0));
+                {
+                    //_model.Draw(Matrix.T(focusedItemBounds.center), new Color(1, 0, 0));
+                }
 
                 bool stillTouchingFocusedItem = anyFingerTipTouching(focusedItemBounds, lHand, rHand);
 
@@ -216,7 +236,9 @@ namespace ARInventory
 
                 // Draw intersection bounds in green
                 if (App.DEBUG_ON)
-				    _model.Draw(Matrix.T(itemBounds.center), new Color(0, 1, 0));
+                {
+				    //_model.Draw(Matrix.T(itemBounds.center), new Color(0, 1, 0));
+                }
 
 				if (anyFingerTipTouching(itemBounds, leftHand, rightHand))
                 {

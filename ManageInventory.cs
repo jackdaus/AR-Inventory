@@ -27,7 +27,6 @@ namespace ARInventory
         Pose _editWindowPose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
         Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
 
-
 		TextStyle _largeTextStyle;
 
         public bool Initialize()
@@ -134,16 +133,22 @@ namespace ARInventory
                         Controller.UpdateItem(item);
                     }
                     UI.SameLine();
-                    if (UI.ButtonRound("delete-item-button", Catalog.Sprites.IconDelete))
+                    if (UI.ButtonRound("clear-item-name-button", Catalog.Sprites.IconClear))
                     {
+                        item.Title = String.Empty;
+						Controller.UpdateItem(item);
+					}
+					UI.SameLine();
+					if (UI.ButtonRound("delete-item-button", Catalog.Sprites.IconDelete))
+					{
 						Controller.DeleteItem(item.Id);
 						App.ItemService.Items.Remove(item);
-                        if (App.ItemService.SearchedItem == item)
-                        {
-                            App.ItemService.SearchedItem = null;
-                        }
+						if (App.ItemService.SearchedItem == item)
+						{
+							App.ItemService.SearchedItem = null;
+						}
 					}
-                    if (App.DEBUG_ON)
+					if (App.DEBUG_ON)
                     {
                         UI.Label($"SpatialAnchorUuid: {item.SpatialAnchorUuid}");
                     }
@@ -284,6 +289,9 @@ namespace ARInventory
             return false;
         }
 
+        // Give a unique index to new items. 
+        private int _newItemCounter = 1;
+
         private void createNewItem()
         {
             // This new item will appear directly in front of user's head
@@ -294,11 +302,13 @@ namespace ARInventory
             {
                 Id = Guid.NewGuid(),
                 Pose = Pose.Identity,
-                Title = "NEW",
+                Title = $"NEW ITEM #{_newItemCounter}",
             };
 
-            // The anchor id will be asynchronously set via a callback once it's finished being created
-            App.SpatialEntity.CreateAnchor(newItemPose, 
+            _newItemCounter++;
+
+			// The anchor id will be asynchronously set via a callback once it's finished being created
+			App.SpatialEntity.CreateAnchor(newItemPose, 
                 (Guid newId) =>
                     {
                         newItemDto.SpatialAnchorUuid = newId;

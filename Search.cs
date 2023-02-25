@@ -42,11 +42,13 @@ namespace ARInventory
                 .ToList()
                 .ForEach(item =>
                 {
-                    if (UI.Button(item.Title))
-                    {
-                        Log.Info("Selected " + item.Title);
-                        App.ItemService.SearchedItem = item;
-                    }
+                    UI.PushId(item.Id.ToString());
+                        if (UI.Button(item.Title))
+                        {
+                            Log.Info("Selected " + item.Title);
+                            App.ItemService.SearchedItem = item;
+                        }
+                    UI.PopId();
                 });
             UI.WindowEnd();
 

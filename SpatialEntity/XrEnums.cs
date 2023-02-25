@@ -46,6 +46,7 @@ namespace SpatialEntity
 	{
 		Success = 0,
 		XR_ERROR_VALIDATION_FAILURE = -1,
+		XR_ERROR_RUNTIME_FAILURE = -2,
 		XR_ERROR_FEATURE_UNSUPPORTED = -8,
 
 		// XR_FB_spatial_entity

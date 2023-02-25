@@ -67,7 +67,7 @@ namespace ARInventory
                 createNewItem();
 
             if (UI.Button("Quit"))
-                SK.Shutdown();
+                SK.Quit();
 
 			UI.WindowEnd();
 
@@ -289,7 +289,7 @@ namespace ARInventory
             return false;
         }
 
-        // Give a unique index to new items. 
+        // Give a unique index to new items, for readability 
         private int _newItemCounter = 1;
 
         private void createNewItem()

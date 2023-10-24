@@ -20,15 +20,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="StereoKit" Version="0.3.8" />
 	</ItemGroup>
 
 	<!--Point Android to the right folders, otherwise these default to the root
 	    directory.-->
 	<PropertyGroup>
-		<AndroidManifest          >..\..\Platforms\Android\AndroidManifest.xml</AndroidManifest>
+		<AndroidManifest>..\..\Platforms\Android\AndroidManifest.xml</AndroidManifest>
 		<MonoAndroidResourcePrefix>..\..\Platforms\Android\Resources</MonoAndroidResourcePrefix>
-		<MonoAndroidAssetsPrefix  >..\..\Platforms\Android\Assets</MonoAndroidAssetsPrefix>
+		<MonoAndroidAssetsPrefix>..\..\Platforms\Android\Assets</MonoAndroidAssetsPrefix>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -41,7 +42,7 @@
 		<!--Hide everything in this project, otherwise it's a lot of
 		    duplication that creates noise.-->
 		<Compile Update="..\..\**" Visible="false" />
-		<None    Update="..\..\**" Visible="false" />
+		<None Update="..\..\**" Visible="false" />
 		<Content Update="..\..\**" Visible="false" />
 
 		<Compile Update="..\..\**\*.Android.cs" Visible="true" />

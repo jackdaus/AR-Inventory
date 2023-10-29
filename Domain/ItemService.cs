@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using static StereoKitFBSpatialEntity.SpatialEntityFBExt;
 
-namespace AR_Inventory
+namespace AR_Inventory.Domain
 {
     internal class ItemService
     {
@@ -24,13 +22,13 @@ namespace AR_Inventory
             Items = Factory.GetItemDtos().ToList();
         }
 
-		public Anchor? TryGetSpatialAnchor(ItemDto item)
-		{
-			Anchor? anchor = null;
+        public Anchor? TryGetSpatialAnchor(ItemDto item)
+        {
+            Anchor? anchor = null;
             if (item.SpatialAnchorUuid != null)
                 anchor = App.SpatialEntity.TryGetSpatialAnchor(item.SpatialAnchorUuid.Value);
 
-			return anchor;
-		}
-	}
+            return anchor;
+        }
+    }
 }

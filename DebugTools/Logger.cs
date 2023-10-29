@@ -18,7 +18,7 @@ namespace AR_Inventory.DevTools
 
         public bool Initialize()
         {
-            Log.Subscribe(onLog);
+            Log.Subscribe(OnLog);
             return true;
         }
 
@@ -37,7 +37,7 @@ namespace AR_Inventory.DevTools
             UI.WindowEnd();
         }
 
-        private void onLog(LogLevel level, string text)
+        private void OnLog(LogLevel level, string text)
         {
             logList.Add(text);
 

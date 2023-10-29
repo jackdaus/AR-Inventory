@@ -1,9 +1,5 @@
-﻿using AR_Inventory.Entities.Models;
-using StereoKit;
-using System;
-using System.Collections.Generic;
+﻿using StereoKit;
 using System.Linq;
-using System.Text;
 
 namespace AR_Inventory
 {
@@ -11,7 +7,7 @@ namespace AR_Inventory
     {
         public static IQueryable<ItemDto> GetItemDtos()
         {
-            return App.Context.Items.Select(item => new ItemDto
+            return App.Db.Items.Select(item => new ItemDto
             {
                 Id = item.Id,
                 SpatialAnchorUuid = item.SpatialAnchorUuid,

@@ -1,13 +1,11 @@
-﻿using AR_Inventory.Entities.Models;
-using StereoKit;
+﻿using StereoKit;
 using StereoKit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using static StereoKitFBSpatialEntity.SpatialEntityFBExt;
 
-namespace AR_Inventory
+namespace AR_Inventory.Steppers
 {
     /// <summary>
     /// Manages the UI for edditing the inventory items.
@@ -18,7 +16,7 @@ namespace AR_Inventory
         public bool Enabled { get; set; }
 
         Pose _pose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
-        
+
         Model _model;
         Model _shellModel;
 
@@ -27,26 +25,26 @@ namespace AR_Inventory
         Pose _editWindowPose = new Pose(0.2f, 0, -0.4f, Quat.LookDir(0, 0, 1));
         Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
 
-		TextStyle _largeTextStyle;
+        TextStyle _largeTextStyle;
 
         public bool Initialize()
         {
             _largeTextStyle = Text.MakeStyle(Font.Default, 0.02f, Color.White);
 
             // The shell material has transparency. So we set that up here.
-			_shellMaterial = Material.Default.Copy();
-			_shellMaterial.Transparency = Transparency.Blend;
-			_shellMaterial.DepthWrite = false;
+            _shellMaterial = Material.Default.Copy();
+            _shellMaterial.Transparency = Transparency.Blend;
+            _shellMaterial.DepthWrite = false;
 
-            _model      = Model.FromMesh(Mesh.GenerateSphere(0.05f), Default.MaterialUI);
-			_shellModel = Model.FromMesh(Mesh.GenerateSphere(0.2f), _shellMaterial);
+            _model = Model.FromMesh(Mesh.GenerateSphere(0.05f), Default.MaterialUI);
+            _shellModel = Model.FromMesh(Mesh.GenerateSphere(0.2f), _shellMaterial);
 
-			return true;
+            return true;
         }
 
         public void Shutdown()
         {
-            
+
         }
 
         public void Step()
@@ -69,20 +67,20 @@ namespace AR_Inventory
             if (UI.Button("Quit"))
                 SK.Quit();
 
-			UI.WindowEnd();
+            UI.WindowEnd();
 
 
             // Render Items
             //
-            foreach(ItemDto item in App.ItemService.Items.ToList())
+            foreach (ItemDto item in App.ItemService.Items.ToList())
             {
-				// Try to get spatial anchor for the item
+                // Try to get spatial anchor for the item
                 Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
 
                 // If spatial anchors are present and loaded, we will use the anchor as a root for the item.
                 // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the
                 // anchor root (mostly for dev purposes)
-				if (anchor != null)
+                if (anchor != null)
                     Hierarchy.Push(anchor.Value.Pose.ToMatrix());
 
                 // Update location data in persistent storage
@@ -96,27 +94,27 @@ namespace AR_Inventory
                 Color shellColor = modelColor;
                 shellColor.a = 0.2f;
 
-				// Draw the items!
-				_model.Draw(item.Pose.ToMatrix(), modelColor);
+                // Draw the items!
+                _model.Draw(item.Pose.ToMatrix(), modelColor);
 
                 // For the minimap! We draw the model again as well as the shell. Making sure to specify
                 // RenderLayer.ThirdPerson, since this is what the minimap is going off of.
                 float size = App.ItemService.SearchedItem == item ? 2 : 1;
-				_model.Draw     (item.Pose.ToMatrix(size), modelColor, layer: RenderLayer.ThirdPerson);
-				_shellModel.Draw(item.Pose.ToMatrix(size), shellColor, layer: RenderLayer.ThirdPerson);
+                _model.Draw(item.Pose.ToMatrix(size), modelColor, layer: RenderLayer.ThirdPerson);
+                _shellModel.Draw(item.Pose.ToMatrix(size), shellColor, layer: RenderLayer.ThirdPerson);
 
-				// Item label floats 10cm above the object
-				Vec3 titlePosition = item.Pose.position;
+                // Item label floats 10cm above the object
+                Vec3 titlePosition = item.Pose.position;
                 titlePosition.y += 12 * U.cm;
 
-				Quat titleOrientation = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
+                Quat titleOrientation = Quat.LookAt(Hierarchy.ToWorld(item.Pose.position), Input.Head.position);
 
                 // Correct the text angle to remove rotation from the anchor
                 if (anchor != null)
                 {
-				    Quat inverseRootOrientation = anchor.Value.Pose.orientation.Inverse;
-					titleOrientation = inverseRootOrientation * titleOrientation;
-				}
+                    Quat inverseRootOrientation = anchor.Value.Pose.orientation.Inverse;
+                    titleOrientation = inverseRootOrientation * titleOrientation;
+                }
 
                 if (App.ItemService.FocusedItem?.Id == item.Id)
                 {
@@ -128,53 +126,53 @@ namespace AR_Inventory
                     _editWindowPose.orientation = titleOrientation;
 
                     UI.WindowBegin("edit-title-window", ref _editWindowPose, UIWin.Body);
-                    if (UI.Input( "title-input", ref item.Title, _inputSize))
+                    if (UI.Input("title-input", ref item.Title, _inputSize))
                     {
                         Controller.UpdateItem(item);
                     }
                     UI.SameLine();
                     if (UI.ButtonRound("clear-item-name-button", Catalog.Sprites.IconClear))
                     {
-                        item.Title = String.Empty;
-						Controller.UpdateItem(item);
-					}
-					UI.SameLine();
-					if (UI.ButtonRound("delete-item-button", Catalog.Sprites.IconDelete))
-					{
-						Controller.DeleteItem(item.Id);
-						App.ItemService.Items.Remove(item);
-						if (App.ItemService.SearchedItem == item)
-						{
-							App.ItemService.SearchedItem = null;
-						}
-					}
-					if (App.DEBUG_ON)
+                        item.Title = string.Empty;
+                        Controller.UpdateItem(item);
+                    }
+                    UI.SameLine();
+                    if (UI.ButtonRound("delete-item-button", Catalog.Sprites.IconDelete))
+                    {
+                        Controller.DeleteItem(item.Id);
+                        App.ItemService.Items.Remove(item);
+                        if (App.ItemService.SearchedItem == item)
+                        {
+                            App.ItemService.SearchedItem = null;
+                        }
+                    }
+                    if (App.DEBUG_ON)
                     {
                         UI.Label($"SpatialAnchorUuid: {item.SpatialAnchorUuid}");
                     }
-					UI.WindowEnd();
+                    UI.WindowEnd();
                 }
                 else
                 {
-					Pose titlePose = new Pose(titlePosition, titleOrientation);
+                    Pose titlePose = new Pose(titlePosition, titleOrientation);
                     UI.EnableFarInteract = false;
-					UI.WindowBegin($"title-{item.Id}", ref titlePose, UIWin.Body);
+                    UI.WindowBegin($"title-{item.Id}", ref titlePose, UIWin.Body);
                     UI.PushTextStyle(_largeTextStyle);
-					UI.Label(item.Title);
+                    UI.Label(item.Title);
                     UI.PopTextStyle();
 
                     // Display warning icon if anchor cannot be found
                     if (anchor == null)
                         Catalog.Sprites.IconWarning.Draw(Matrix.TS(Vec3.Forward * 0.001f, 0.05f), TextAlign.BottomCenter, new Color(1, 0.8f, 0));
-					
-                    UI.WindowEnd();
-					UI.EnableFarInteract = true;
-				}
 
-				if (anchor != null)
+                    UI.WindowEnd();
+                    UI.EnableFarInteract = true;
+                }
+
+                if (anchor != null)
                     Hierarchy.Pop();
-			}
-           
+            }
+
 
             // Update focused item
             //
@@ -184,20 +182,20 @@ namespace AR_Inventory
 
                 // Play a sound if an item was just selected
                 if (App.ItemService.FocusedItem != null)
-				    Sound.Click.Play(App.ItemService.FocusedItem.Pose.position); // TODO adjust to anchor space
-			}
-			else
+                    Sound.Click.Play(App.ItemService.FocusedItem.Pose.position); // TODO adjust to anchor space
+            }
+            else
             {
-				var center = App.ItemService.FocusedItem.Pose.position;
+                var center = App.ItemService.FocusedItem.Pose.position;
 
-				// Try to get spatial anchor for the item
-				Anchor? anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.FocusedItem);
+                // Try to get spatial anchor for the item
+                Anchor? anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.FocusedItem);
 
                 // Adjust to anchor space if available
                 if (anchor != null)
                     center = anchor.Value.Pose.ToMatrix() * center;
 
-				Bounds focusedItemBounds = new Bounds(center, _model.Bounds.dimensions);
+                Bounds focusedItemBounds = new Bounds(center, _model.Bounds.dimensions);
 
                 // Draw intersection bounds in red
                 if (App.DEBUG_ON)
@@ -223,7 +221,7 @@ namespace AR_Inventory
         public void AddItem()
         {
             CreateNewItem();
-		}
+        }
 
         private ItemDto FirstItemTouchedByFinger(List<ItemDto> items, Hand leftHand, Hand rightHand)
         {
@@ -231,22 +229,22 @@ namespace AR_Inventory
             {
                 var center = item.Pose.position;
 
-				// Try to get spatial anchor for the item
-				Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
+                // Try to get spatial anchor for the item
+                Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
 
-				// Adjust to anchor space if available
-				if (anchor != null)
+                // Adjust to anchor space if available
+                if (anchor != null)
                     center = anchor.Value.Pose.ToMatrix() * center;
 
-				Bounds itemBounds = new Bounds(center, _model.Bounds.dimensions);
+                Bounds itemBounds = new Bounds(center, _model.Bounds.dimensions);
 
                 // Draw intersection bounds in green
                 if (App.DEBUG_ON)
                 {
-				    //_model.Draw(Matrix.T(itemBounds.center), new Color(0, 1, 0));
+                    //_model.Draw(Matrix.T(itemBounds.center), new Color(0, 1, 0));
                 }
 
-				if (AnyFingerTipTouching(itemBounds, leftHand, rightHand))
+                if (AnyFingerTipTouching(itemBounds, leftHand, rightHand))
                 {
                     return item;
                 }
@@ -308,9 +306,9 @@ namespace AR_Inventory
 
             _newItemCounter++;
 
-			// The anchor id will be asynchronously set via a callback once it's finished being created
-			App.SpatialEntity.CreateAnchor(newItemPose, 
-                (Guid newId) =>
+            // The anchor id will be asynchronously set via a callback once it's finished being created
+            App.SpatialEntity.CreateAnchor(newItemPose,
+                (newId) =>
                     {
                         newItemDto.SpatialAnchorUuid = newId;
                         // Save the item so the id persists in our db storage

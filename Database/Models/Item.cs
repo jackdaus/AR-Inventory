@@ -1,10 +1,8 @@
-﻿using AR_Inventory.Entities.Interfaces;
-using System;
-using System.Numerics;
+﻿using System;
 
-namespace AR_Inventory.Entities.Models
+namespace AR_Inventory.Database.Models
 {
-    public class Item : IGotId
+    public class Item
     {
         public Guid Id { get; set; }
         public Guid? SpatialAnchorUuid { get; set; }

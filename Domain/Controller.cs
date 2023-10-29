@@ -1,9 +1,5 @@
-﻿using AR_Inventory.Entities.Models;
-using StereoKit;
+﻿using AR_Inventory.Database.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace AR_Inventory
 {
@@ -26,13 +22,13 @@ namespace AR_Inventory
             item.OrientationW = itemDto.Pose.orientation.w;
             item.Title = itemDto.Title;
 
-            App.Context.Items.Add(item);
-            App.Context.SaveChanges();
+            App.Db.Items.Add(item);
+            App.Db.SaveChanges();
         }
 
         public static void UpdateItem(ItemDto itemDto)
         {
-            var item = App.Context.Items.Find(itemDto.Id);
+            var item = App.Db.Items.Find(itemDto.Id);
             item.SpatialAnchorUuid = itemDto.SpatialAnchorUuid;
             item.LocationX = itemDto.Pose.position.x;
 			item.LocationY = itemDto.Pose.position.y;
@@ -43,16 +39,21 @@ namespace AR_Inventory
             item.OrientationW = itemDto.Pose.orientation.w;
             item.Title = itemDto.Title;
 
-            App.Context.Items.Update(item);
-            App.Context.SaveChanges();
+            App.Db.Items.Update(item);
+            App.Db.SaveChanges();
         }
 
         public static void DeleteItem(Guid itemId)
         {
-            var item = App.Context.Items.Find(itemId);
-            //TODO erase anchor?
-            App.Context.Items.Remove(item);
-			App.Context.SaveChanges();
+            var item = App.Db.Items.Find(itemId);
+
+            // Delete anchor if it exists.
+            // TODO consider the edge case where we want to delete and Item when the Anchor has not been loaded.
+            if (item.SpatialAnchorUuid != null) 
+                App.SpatialEntity.DeleteAnchor(item.SpatialAnchorUuid.Value);
+
+            App.Db.Items.Remove(item);
+			App.Db.SaveChanges();
 		}
 	}
 }

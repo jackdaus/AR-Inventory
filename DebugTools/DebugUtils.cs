@@ -5,7 +5,7 @@ using System.Text;
 
 namespace AR_Inventory
 {
-    static class DebugTools
+    static class DebugUtils
     {
         public static void DisplayPosition(Pose pose)
         {

@@ -1,7 +1,7 @@
 using StereoKit.Framework;
 using StereoKit;
 
-namespace AR_Inventory
+namespace AR_Inventory.Steppers
 {
     // TODO
     // 1. Fade map visible with angle OR Activte / Deactivate Minimap
@@ -11,11 +11,11 @@ namespace AR_Inventory
     {
         public bool Enabled { get; set; }
 
-        Tex      _renderTex;
-        Mesh     _minimapMesh;
+        Tex _renderTex;
+        Mesh _minimapMesh;
         Material _minimapMaterial;
 
-        Tex      _backgroundTex;
+        Tex _backgroundTex;
         Material _backgroundMaterial;
 
         public bool Initialize()
@@ -34,21 +34,21 @@ namespace AR_Inventory
 
             // TODO figure out why image is rotated and mirrored on .NET vs. Android? Temp fix below
             if (App.IsAndroid)
-			    _minimapMesh = Mesh.GenerateCircle(10 * U.cm, -Vec3.UnitZ, -Vec3.UnitY, 50);
+                _minimapMesh = Mesh.GenerateCircle(10 * U.cm, -Vec3.UnitZ, -Vec3.UnitY, 50);
             else
-				_minimapMesh = Mesh.GenerateCircle(10 * U.cm,  Vec3.UnitZ,  Vec3.UnitY, 50);
+                _minimapMesh = Mesh.GenerateCircle(10 * U.cm, Vec3.UnitZ, Vec3.UnitY, 50);
 
             _backgroundTex = Tex.FromFile("minimap_background.jpg");
-			// TODO v0.3.7 use built-in blit shader
-			_backgroundMaterial = new Material(Shader.Find("default/shader_blit"));
-			_backgroundMaterial["source"] = _backgroundTex;
+            // TODO v0.3.7 use built-in blit shader
+            _backgroundMaterial = new Material(Shader.Find("default/shader_blit"));
+            _backgroundMaterial["source"] = _backgroundTex;
 
-			return true;
+            return true;
         }
 
         public void Shutdown()
         {
-            
+
         }
 
         public void Step()
@@ -73,8 +73,8 @@ namespace AR_Inventory
 
             // Camera is located 3m above user, looking down
             Quat cameraOrientation = Quat.LookDir(-Vec3.UnitY);
-            Vec3 cameraLocation    = Input.Head.position + Vec3.UnitY * 3 * U.m;
-            Matrix camera          = Matrix.TR(cameraLocation, cameraOrientation);
+            Vec3 cameraLocation = Input.Head.position + Vec3.UnitY * 3 * U.m;
+            Matrix camera = Matrix.TR(cameraLocation, cameraOrientation);
 
             // Draw a background color
             Renderer.Blit(_renderTex, _backgroundMaterial);
@@ -84,7 +84,7 @@ namespace AR_Inventory
             Renderer.RenderTo(_renderTex,
                 camera,
                 Matrix.Orthographic(4 * U.m, 4 * U.m, 0.01f, 100),
-                layerFilter: RenderLayer.ThirdPerson, 
+                layerFilter: RenderLayer.ThirdPerson,
                 RenderClear.Depth);
         }
     }

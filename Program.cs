@@ -1,4 +1,5 @@
 ﻿using AR_Inventory.DevTools;
+using AR_Inventory.Steppers;
 using StereoKit;
 using StereoKit.Framework;
 
@@ -8,7 +9,6 @@ public static class Program
 {
     static void Main(string[] args)
 	{
-        // Initialize AR-Inventory app
         App.PreSKInit();
 
         // Initialize StereoKit
@@ -34,7 +34,7 @@ public static class Program
         SK.AddStepper<Logger>();
         SK.AddStepper<DebugWindow>();
         SK.AddStepper<DebugFBSpatialEntity>();
-
+        
         // Radial hand menu
         SK.AddStepper(new HandMenuRadial(
             new HandRadialLayer("Root",

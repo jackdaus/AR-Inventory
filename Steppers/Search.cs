@@ -1,17 +1,16 @@
-﻿using StereoKitFBSpatialEntity;
-using StereoKit;
+﻿using StereoKit;
 using StereoKit.Framework;
 using System;
 using System.Linq;
 using static StereoKitFBSpatialEntity.SpatialEntityFBExt;
 
-namespace AR_Inventory
+namespace AR_Inventory.Steppers
 {
     public class Search : IStepper
     {
-        private Pose   _menuPose    = new Pose(0, 0.2f, -0.4f, Quat.LookDir(0, 0, 1));
-        private Vec2   _inputSize   = new Vec2(15 * U.cm, 3 * U.cm);
-        private String _searchInput = String.Empty;
+        private Pose _menuPose = new Pose(0, 0.2f, -0.4f, Quat.LookDir(0, 0, 1));
+        private Vec2 _inputSize = new Vec2(15 * U.cm, 3 * U.cm);
+        private string _searchInput = string.Empty;
 
         public bool Enabled { get; set; }
 
@@ -22,7 +21,7 @@ namespace AR_Inventory
 
         public void Shutdown()
         {
-            
+
         }
 
         public void Step()
@@ -32,9 +31,9 @@ namespace AR_Inventory
             UI.SameLine();
             if (UI.ButtonRound("clear-search-input", Catalog.Sprites.IconClear))
             {
-                _searchInput = String.Empty;
+                _searchInput = string.Empty;
                 App.ItemService.SearchedItem = null;
-                App.ItemService.FocusedItem  = null;
+                App.ItemService.FocusedItem = null;
             }
             UI.HSeparator();
             App.ItemService.Items
@@ -43,11 +42,11 @@ namespace AR_Inventory
                 .ForEach(item =>
                 {
                     UI.PushId(item.Id.ToString());
-                        if (UI.Button(item.Title))
-                        {
-                            Log.Info("Selected " + item.Title);
-                            App.ItemService.SearchedItem = item;
-                        }
+                    if (UI.Button(item.Title))
+                    {
+                        Log.Info("Selected " + item.Title);
+                        App.ItemService.SearchedItem = item;
+                    }
                     UI.PopId();
                 });
             UI.WindowEnd();
@@ -56,26 +55,26 @@ namespace AR_Inventory
             {
                 // Draw a path from the user's hand to the item, one dimension at a time
                 Matrix itemPoseMatrix = App.ItemService.SearchedItem.Pose.ToMatrix();
-                Anchor? anchor        = App.ItemService.TryGetSpatialAnchor(App.ItemService.SearchedItem);
+                Anchor? anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.SearchedItem);
 
                 if (anchor != null)
                     itemPoseMatrix = itemPoseMatrix * anchor.Value.Pose.ToMatrix();
 
                 Vec3 p0 = Input.Hand(Handed.Right).wrist.position;
-				Vec3 p1 = new Vec3(p0.x, p0.y, itemPoseMatrix.Translation.z);
-				Vec3 p2 = new Vec3(itemPoseMatrix.Translation.x, p0.y, itemPoseMatrix.Translation.z);
-				Vec3 p3 = itemPoseMatrix.Translation;
+                Vec3 p1 = new Vec3(p0.x, p0.y, itemPoseMatrix.Translation.z);
+                Vec3 p2 = new Vec3(itemPoseMatrix.Translation.x, p0.y, itemPoseMatrix.Translation.z);
+                Vec3 p3 = itemPoseMatrix.Translation;
 
                 Color color = new Color(0, 1, 1);
-				Lines.Add(p0, p1, color, 0.005f);
-				Lines.Add(p1, p2, color, 0.005f);
-				Lines.Add(p2, p3, color, 0.005f);
-			}
+                Lines.Add(p0, p1, color, 0.005f);
+                Lines.Add(p1, p2, color, 0.005f);
+                Lines.Add(p2, p3, color, 0.005f);
+            }
         }
 
         public void TeleportMenu(Pose pose)
         {
             _menuPose = pose;
         }
-	}
+    }
 }

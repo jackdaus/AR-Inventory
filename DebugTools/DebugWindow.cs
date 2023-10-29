@@ -1,11 +1,8 @@
-﻿using AR_Inventory.Entities;
-using StereoKit;
+﻿using StereoKit;
 using StereoKit.Framework;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace AR_Inventory
 {
@@ -39,51 +36,50 @@ namespace AR_Inventory
                 var isSuccessful = Platform.WriteFile(filename, $"this is the content {DateTime.Now}");
                 Log.Info($"Result of flile write: {isSuccessful}");
             }
-			if (UI.Button("Test read file"))
-			{
-				var temp = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-				Log.Info($"Begin reading test file! {DateTime.Now}");
-				var isSuccessful = Platform.ReadFile($"{temp}/my-file.txt", out string data);
-				Log.Info($"Result of flile read: {isSuccessful}");
-                Log.Info($"data: {data}");
-			}
-			if (UI.Button("Pick file"))
+            if (UI.Button("Test read file"))
             {
-                Platform.FilePicker(PickerMode.Open, logFileContents, null);
+                var temp = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                Log.Info($"Begin reading test file! {DateTime.Now}");
+                var isSuccessful = Platform.ReadFile($"{temp}/my-file.txt", out string data);
+                Log.Info($"Result of flile read: {isSuccessful}");
+                Log.Info($"data: {data}");
+            }
+            if (UI.Button("Pick file"))
+            {
+                Platform.FilePicker(PickerMode.Open, LogFileContents, null);
             }
 
             UI.Label("Context");
             if (UI.Button("Test: Add Item to Context"))
             {
-                testContext();
+                TestContext();
             }
-			if (UI.Button("Test: Load all items from db"))
-			{
-				App.ItemService.ReloadItemsFromStorage();
-			}
-			if (UI.Button("Test: Clean db"))
-			{
-                var allItems = App.Context.Items.ToList();
-
-                allItems.ForEach(item => App.Context.Items.Remove(item));
-                App.Context.SaveChanges();
+            if (UI.Button("Test: Load all items from db"))
+            {
                 App.ItemService.ReloadItemsFromStorage();
-			}
+            }
+            if (UI.Button("Test: Clean db"))
+            {
+                var allItems = App.Db.Items.ToList();
 
-			//if (UI.Button("Quit")) SK.Quit();
-			UI.WindowEnd();
+                allItems.ForEach(item => App.Db.Items.Remove(item));
+                App.Db.SaveChanges();
+                App.ItemService.ReloadItemsFromStorage();
+            }
+
+            UI.WindowEnd();
         }
-
-        private void logFileContents(string file)
+    
+        private void LogFileContents(string file)
         {
             Platform.ReadFile(file, out string text);
             Log.Info(file);
             Log.Info(text);
         }
 
-        private void testContext()
+        private void TestContext()
         {
-            App.Context.Items.Add(new Entities.Models.Item
+            App.Db.Items.Add(new Database.Models.Item
             {
                 Id = Guid.NewGuid(),
                 LocationX = -(float)new Random().NextDouble(), 
@@ -96,9 +92,8 @@ namespace AR_Inventory
                 Title = "Context test",
             });
 
-            var isSuccessful = App.Context.SaveChanges();
+            var isSuccessful = App.Db.SaveChanges();
             Log.Info($"Save was successful: {isSuccessful}");
         }
-
     }
 }

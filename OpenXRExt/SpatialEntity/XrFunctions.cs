@@ -6,7 +6,7 @@ using XrSpace            = System.UInt64;
 using XrSession          = System.UInt64;
 using XrAsyncRequestIdFB = System.UInt64;
 
-namespace SpatialEntity
+namespace StereoKitFBSpatialEntity
 {
 	#region XR_FB_spatial_entity
 
@@ -130,6 +130,7 @@ namespace SpatialEntity
 		out XrSpaceQueryResultsFB results);
 
 	#endregion
+
 
 	#region Other XrFunctions
 

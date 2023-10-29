@@ -1,17 +1,21 @@
-﻿using StereoKit.Framework;
-using StereoKit;
+﻿// This requires an addition to the Android Manifest to work on quest:
+// <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="true" />
+//
+// To work on Quest+Link, you may need to enable beta features in the Oculus
+// app's settings.
+
 using System;
 using System.Runtime.InteropServices;
+using StereoKit.Framework;
+using StereoKit;
 
 namespace AR_Inventory
 {
-    public class PassthroughFBExt : IStepper
+    class PassthroughFBExt : IStepper
     {
         bool extAvailable;
         bool enabled;
-        bool enabledPassthrough;
         bool enableOnInitialize;
-        bool passthroughRunning;
         XrPassthroughFB activePassthrough = new XrPassthroughFB();
         XrPassthroughLayerFB activeLayer = new XrPassthroughLayerFB();
 
@@ -19,16 +23,19 @@ namespace AR_Inventory
         bool oldSky;
 
         public bool Available => extAvailable;
-        public bool Enabled { get => extAvailable && enabled; set => enabled = value; }
-        public bool EnabledPassthrough
+        public bool Enabled
         {
-            get => enabledPassthrough; set
+            get => enabled; set
             {
-                if (Available && enabledPassthrough != value)
+                if (extAvailable == false || enabled == value) return;
+                if (value)
                 {
-                    enabledPassthrough = value;
-                    if (enabledPassthrough) StartPassthrough();
-                    if (!enabledPassthrough) EndPassthrough();
+                    enabled = StartPassthrough();
+                }
+                else
+                {
+                    PausePassthrough();
+                    enabled = false;
                 }
             }
         }
@@ -47,16 +54,18 @@ namespace AR_Inventory
             extAvailable =
                 Backend.XRType == BackendXRType.OpenXR &&
                 Backend.OpenXR.ExtEnabled("XR_FB_passthrough") &&
-                LoadBindings();
+                LoadBindings() &&
+                InitPassthrough();
 
             if (enableOnInitialize)
-                EnabledPassthrough = true;
+                Enabled = true;
+
             return true;
         }
 
         public void Step()
         {
-            if (!EnabledPassthrough) return;
+            if (Enabled == false) return;
 
             XrCompositionLayerPassthroughFB layer = new XrCompositionLayerPassthroughFB(
                 XrCompositionLayerFlags.BLEND_TEXTURE_SOURCE_ALPHA_BIT, activeLayer);
@@ -65,40 +74,67 @@ namespace AR_Inventory
 
         public void Shutdown()
         {
-            EnabledPassthrough = false;
+            if (!Enabled) return;
+            Enabled = false;
+            DestroyPassthrough();
         }
 
-        void StartPassthrough()
+        bool InitPassthrough()
         {
-            if (!extAvailable) return;
-            if (passthroughRunning) return;
-            passthroughRunning = true;
-
-            oldColor = Renderer.ClearColor;
-            oldSky = Renderer.EnableSky;
-
             XrResult result = xrCreatePassthroughFB(
                 Backend.OpenXR.Session,
-                new XrPassthroughCreateInfoFB(XrPassthroughFlagsFB.IS_RUNNING_AT_CREATION_BIT_FB),
+                new XrPassthroughCreateInfoFB(XrPassthroughFlagsFB.None),
                 out activePassthrough);
+            if (result != XrResult.Success)
+            {
+                Log.Err($"xrCreatePassthroughFB failed: {result}");
+                return false;
+            }
 
             result = xrCreatePassthroughLayerFB(
                 Backend.OpenXR.Session,
-                new XrPassthroughLayerCreateInfoFB(activePassthrough, XrPassthroughFlagsFB.IS_RUNNING_AT_CREATION_BIT_FB, XrPassthroughLayerPurposeFB.RECONSTRUCTION_FB),
+                new XrPassthroughLayerCreateInfoFB(activePassthrough, XrPassthroughFlagsFB.None, XrPassthroughLayerPurposeFB.RECONSTRUCTION_FB),
                 out activeLayer);
-
-            Renderer.ClearColor = Color.BlackTransparent;
-            Renderer.EnableSky = false;
+            if (result != XrResult.Success)
+            {
+                Log.Err($"xrCreatePassthroughLayerFB failed: {result}");
+                return false;
+            }
+            return true;
         }
 
-        void EndPassthrough()
+        void DestroyPassthrough()
         {
-            if (!passthroughRunning) return;
-            passthroughRunning = false;
-
-            xrPassthroughPauseFB(activePassthrough);
             xrDestroyPassthroughLayerFB(activeLayer);
             xrDestroyPassthroughFB(activePassthrough);
+        }
+
+        bool StartPassthrough()
+        {
+            XrResult result = xrPassthroughStartFB(activePassthrough);
+            if (result != XrResult.Success)
+            {
+                Log.Err($"xrPassthroughStartFB failed: {result}");
+                return false;
+            }
+
+            result = xrPassthroughLayerResumeFB(activeLayer);
+            if (result != XrResult.Success)
+            {
+                Log.Err($"xrPassthroughLayerResumeFB failed: {result}");
+                return false;
+            }
+
+            oldColor = Renderer.ClearColor;
+            oldSky = Renderer.EnableSky;
+            Renderer.ClearColor = Color.BlackTransparent;
+            Renderer.EnableSky = false;
+            return true;
+        }
+
+        void PausePassthrough()
+        {
+            xrPassthroughPauseFB(activePassthrough);
 
             Renderer.ClearColor = oldColor;
             Renderer.EnableSky = oldSky;
@@ -115,7 +151,8 @@ namespace AR_Inventory
         enum XrPassthroughFlagsFB : UInt64
         {
             None = 0,
-            IS_RUNNING_AT_CREATION_BIT_FB = 0x00000001
+            IS_RUNNING_AT_CREATION_BIT_FB = 0x00000001,
+            LAYER_DEPTH_BIT_FB = 0x00000002
         }
         enum XrCompositionLayerFlags : UInt64
         {
@@ -131,7 +168,7 @@ namespace AR_Inventory
             TRACKED_KEYBOARD_HANDS_FB = 1000203001,
             MAX_ENUM_FB = 0x7FFFFFFF,
         }
-        enum XrResult : UInt32
+        enum XrResult : Int32
         {
             Success = 0,
         }

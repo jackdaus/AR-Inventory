@@ -7,8 +7,7 @@ using XrDuration         = System.Int64;
 using XrSpace            = System.UInt64;
 using XrAsyncRequestIdFB = System.UInt64;
  
-// TODO remove dummy params after upgrading to C#10+
-namespace SpatialEntity
+namespace StereoKitFBSpatialEntity
 {
 	[StructLayout(LayoutKind.Sequential)]
 	struct XrEventDataBuffer
@@ -18,7 +17,7 @@ namespace SpatialEntity
 		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 4000)]
 		public byte[] flags;
 
-		public XrEventDataBuffer(bool dummy)
+		public XrEventDataBuffer()
 		{
 			type = XrStructureType.XR_TYPE_EVENT_DATA_BUFFER;
 			next = IntPtr.Zero;
@@ -35,7 +34,7 @@ namespace SpatialEntity
 		public IntPtr next;
 
 		/// <summary>
-		/// a boolean value that determines if spatial entities are supported by the system.
+		/// A boolean value that determines if spatial entities are supported by the system.
 		/// </summary>
 		public bool supportsSpatialEntity;
 
@@ -110,7 +109,7 @@ namespace SpatialEntity
 		/// </summary>
 		public bool changePending;
 
-		public XrSpaceComponentStatusFB(bool dummy)
+		public XrSpaceComponentStatusFB()
 		{
 			type = XrStructureType.XR_TYPE_SPACE_COMPONENT_STATUS_FB;
 			next = IntPtr.Zero;
@@ -263,13 +262,18 @@ namespace SpatialEntity
 		public IntPtr filter;        // Pointer of type XrSpaceFilterInfoBaseHeaderFB
 		public IntPtr excludeFilter; // Pointer of type XrSpaceFilterInfoBaseHeaderFB
 
-		public XrSpaceQueryInfoFB(bool dummy)
+		// Limit the max load limit to 100 by default
+        public XrSpaceQueryInfoFB() : this(100)
+		{
+		}
+
+        /// <param name="maxResCount">Maximum number of anchors to retrieve</param>
+        public XrSpaceQueryInfoFB(uint maxResCount)
 		{
 			type = XrStructureType.XR_TYPE_SPACE_QUERY_INFO_FB;
 			next = IntPtr.Zero;
 			queryAction = XrSpaceQueryActionFB.XR_SPACE_QUERY_ACTION_LOAD_FB;
-			maxResultCount = 20;
-			//timeout = XrConstants.XR_INFINITE_DURATION; // leads to validation error...?!
+			maxResultCount = maxResCount;
 			timeout = 0;
 			filter = IntPtr.Zero;
 			excludeFilter = IntPtr.Zero;
@@ -286,7 +290,7 @@ namespace SpatialEntity
 		public IntPtr next;
 		public XrSpaceStorageLocationFB location;
 
-		public XrSpaceStorageLocationFilterInfoFB(bool dummy)
+		public XrSpaceStorageLocationFilterInfoFB()
 		{
 			type = XrStructureType.XR_TYPE_SPACE_STORAGE_LOCATION_FILTER_INFO_FB;
 			next = IntPtr.Zero;
@@ -316,7 +320,7 @@ namespace SpatialEntity
 		public UInt32 resultCountOutput;
 		public IntPtr results; // Pointer to XrSpaceQueryResultFB[]
 
-		public XrSpaceQueryResultsFB(bool dummy)
+		public XrSpaceQueryResultsFB()
 		{
 			type = XrStructureType.XR_TYPE_SPACE_QUERY_RESULTS_FB;
 			next = IntPtr.Zero;
@@ -398,7 +402,7 @@ namespace SpatialEntity
 		public float z;
 		public float w;
 
-		public XrQuaternionf(bool dummy)
+		public XrQuaternionf()
 		{
 			x = 0; y = 0; z = 0; w = 0;
 		}
@@ -419,7 +423,7 @@ namespace SpatialEntity
 		public float y;
 		public float z;
 
-		public XrVector3f(bool dummy)
+		public XrVector3f()
 		{
 			x = 0; y = 0; z = 0;
 		}

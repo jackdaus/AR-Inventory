@@ -4,12 +4,12 @@ using StereoKit.Framework;
 
 namespace AR_Inventory;
 
-public class Program
+public static class Program
 {
     static void Main(string[] args)
 	{
         // Initialize AR-Inventory app
-        App.Init();
+        App.PreSKInit();
 
         // Initialize StereoKit
         SKSettings settings = new SKSettings
@@ -20,21 +20,17 @@ public class Program
         if (!SK.Initialize(settings))
 			return;
 
-        // Floor asset
-        Matrix   floorTransform = Matrix.TS(0, -1.5f, 0, new Vec3(30, 0.1f, 30));
-		Material floorMaterial  = new Material("floor.hlsl");
-		floorMaterial.Transparency = Transparency.Blend;
+        App.PostSKInit();
 
-        // Load all system anchors (if feature is available)
-        App.SpatialEntity.Enabled = true;
-        if (App.SpatialEntity.Available)
-            App.SpatialEntity.LoadAllAnchors();
+        // Floor for VR mode
+        Matrix   floorTransform    = Matrix.TS(0, -1.5f, 0, new Vec3(30, 0.1f, 30));
+		Material floorMaterial     = new Material("floor.hlsl");
+		floorMaterial.Transparency = Transparency.Blend;
 
         // Initialize Steppers
         ManageInventory manageInventory = SK.AddStepper<ManageInventory>();
-        Minimap minimap = SK.AddStepper<Minimap>();
-        Search search = SK.AddStepper<Search>();
-
+        Minimap minimap                 = SK.AddStepper<Minimap>();
+        Search search                   = SK.AddStepper<Search>();
         SK.AddStepper<Logger>();
         SK.AddStepper<DebugWindow>();
         SK.AddStepper<DebugFBSpatialEntity>();
@@ -57,7 +53,7 @@ public class Program
         // Core application loop
         SK.Run(() => {
             // Only draw floor when using VR headset with no AR passthrough
-            if (SK.System.displayType == Display.Opaque && !App.Passthrough.EnabledPassthrough)
+            if (SK.System.displayType == Display.Opaque && !App.Passthrough.Enabled)
 				Mesh.Cube.Draw(floorMaterial, floorTransform);
 		});
 	}

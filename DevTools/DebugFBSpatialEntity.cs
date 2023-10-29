@@ -40,15 +40,15 @@ class DebugFBSpatialEntity : IStepper
 			UI.Label($"Anchor count loaded: {App.SpatialEntity.Anchors.Count}");
 
 			if (UI.Button("Erase All Anchors"))
-				App.SpatialEntity.EraseAllAnchors();
+				App.SpatialEntity.DeleteAllAnchors();
 		}
 
-		foreach(var key in App.SpatialEntity.Anchors.Keys)
+		foreach(var anchor in App.SpatialEntity.Anchors)
 		{
-			var anchor = App.SpatialEntity.Anchors[key];
+			var key = anchor.Uuid;
 
-			UI.PanelBegin();
-			if (UI.Button($"{key.ToString()}"))
+            UI.PanelBegin();
+			if (UI.Button($"{key}"))
 			{
 				_selectedAnchorId = key;
 			}
@@ -65,7 +65,7 @@ class DebugFBSpatialEntity : IStepper
 		UI.WindowEnd();
 
 		// Spatial anchor visual
-		foreach(var anchor in App.SpatialEntity.Anchors.Values)
+		foreach(var anchor in App.SpatialEntity.Anchors)
 		{
 			Mesh.Cube.Draw(Material.Default, anchor.Pose.ToMatrix(0.01f), new Color(1, 0.5f, 0));
 		}

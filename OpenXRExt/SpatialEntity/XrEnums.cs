@@ -1,7 +1,7 @@
 ﻿using System;
 using XrFlags64 = System.UInt64;
 
-namespace SpatialEntity
+namespace StereoKitFBSpatialEntity
 {
 	enum XrSpaceLocationFlags : XrFlags64
 	{
@@ -74,7 +74,8 @@ namespace SpatialEntity
 	{
 		XR_SPACE_STORAGE_LOCATION_INVALID_FB = 0,
 		XR_SPACE_STORAGE_LOCATION_LOCAL_FB = 1,
-		XR_SPACE_STORAGE_LOCATION_MAX_ENUM_FB = 0x7FFFFFFF
+        XR_SPACE_STORAGE_LOCATION_CLOUD_FB = 2,
+        XR_SPACE_STORAGE_LOCATION_MAX_ENUM_FB = 0x7FFFFFFF
 	}
 
 	// Provided by XR_FB_spatial_entity_storage

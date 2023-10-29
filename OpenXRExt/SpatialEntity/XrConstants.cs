@@ -1,6 +1,6 @@
 ﻿using XrDuration = System.Int64;
 
-namespace SpatialEntity
+namespace StereoKitFBSpatialEntity
 {
 	static class XrConstants
 	{

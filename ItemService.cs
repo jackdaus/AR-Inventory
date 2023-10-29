@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using static SpatialEntity.SpatialEntityFBExt;
+using static StereoKitFBSpatialEntity.SpatialEntityFBExt;
 
 namespace AR_Inventory
 {
@@ -24,11 +24,11 @@ namespace AR_Inventory
             Items = Factory.GetItemDtos().ToList();
         }
 
-		public Anchor TryGetSpatialAnchor(ItemDto item)
+		public Anchor? TryGetSpatialAnchor(ItemDto item)
 		{
-			Anchor anchor = null;
-			if (item.SpatialAnchorUuid != null)
-				App.SpatialEntity.Anchors.TryGetValue(item.SpatialAnchorUuid.Value, out anchor);
+			Anchor? anchor = null;
+            if (item.SpatialAnchorUuid != null)
+                anchor = App.SpatialEntity.TryGetSpatialAnchor(item.SpatialAnchorUuid.Value);
 
 			return anchor;
 		}

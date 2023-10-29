@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using static SpatialEntity.SpatialEntityFBExt;
+using static StereoKitFBSpatialEntity.SpatialEntityFBExt;
 
 namespace AR_Inventory
 {
@@ -60,11 +60,11 @@ namespace AR_Inventory
             if (App.Passthrough.Available)
             {
                 if (UI.ButtonRound("Passthrough", Catalog.Sprites.IconEye))
-                    App.Passthrough.EnabledPassthrough = !App.Passthrough.EnabledPassthrough;
+                    App.Passthrough.Enabled = !App.Passthrough.Enabled;
             }
 
             if (UI.Button("New item"))
-                createNewItem();
+                CreateNewItem();
 
             if (UI.Button("Quit"))
                 SK.Quit();
@@ -77,19 +77,19 @@ namespace AR_Inventory
             foreach(ItemDto item in App.ItemService.Items.ToList())
             {
 				// Try to get spatial anchor for the item
-                Anchor anchor = App.ItemService.TryGetSpatialAnchor(item);
+                Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
 
                 // If spatial anchors are present and loaded, we will use the anchor as a root for the item.
                 // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the
                 // anchor root (mostly for dev purposes)
 				if (anchor != null)
-                    Hierarchy.Push(anchor.Pose.ToMatrix());
+                    Hierarchy.Push(anchor.Value.Pose.ToMatrix());
 
                 // Update location data in persistent storage
                 if (UI.Handle(item.Id.ToString(), ref item.Pose, _model.Bounds))
                     Controller.UpdateItem(item); // TODO this could be made more efficient by only updating once the UI handle is released. Or maybe setting a throttle (if network connected, for real-time collab)
 
-                // Highlight the item if it's the search result. Shell color is a bit transparent.
+                // Highlight the item if it's the search result. Shell color is a little transparent.
                 Color modelColor = App.ItemService.SearchedItem == item ? new Color(0, 1, 1) : Color.White;
 
                 // Shell color is same as model color, but alpha = 0.1
@@ -114,11 +114,11 @@ namespace AR_Inventory
                 // Correct the text angle to remove rotation from the anchor
                 if (anchor != null)
                 {
-				    Quat inverseRootOrientation = anchor.Pose.orientation.Inverse;
+				    Quat inverseRootOrientation = anchor.Value.Pose.orientation.Inverse;
 					titleOrientation = inverseRootOrientation * titleOrientation;
 				}
 
-                if (App.ItemService.FocusedItem == item)
+                if (App.ItemService.FocusedItem?.Id == item.Id)
                 {
                     // TODO set UIBox scale to adjust to smaller/larger models
                     Mesh.Cube.Draw(Material.UIBox, item.Pose.ToMatrix(0.12f));
@@ -180,7 +180,9 @@ namespace AR_Inventory
             //
             if (App.ItemService.FocusedItem == null)
             {
-                App.ItemService.FocusedItem = firstItemTouchedByFinger(App.ItemService.Items, lHand, rHand);
+                App.ItemService.FocusedItem = FirstItemTouchedByFinger(App.ItemService.Items, lHand, rHand);
+
+                // Play a sound if an item was just selected
                 if (App.ItemService.FocusedItem != null)
 				    Sound.Click.Play(App.ItemService.FocusedItem.Pose.position); // TODO adjust to anchor space
 			}
@@ -189,11 +191,11 @@ namespace AR_Inventory
 				var center = App.ItemService.FocusedItem.Pose.position;
 
 				// Try to get spatial anchor for the item
-				Anchor anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.FocusedItem);
+				Anchor? anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.FocusedItem);
 
                 // Adjust to anchor space if available
                 if (anchor != null)
-                    center = anchor.Pose.ToMatrix() * center;
+                    center = anchor.Value.Pose.ToMatrix() * center;
 
 				Bounds focusedItemBounds = new Bounds(center, _model.Bounds.dimensions);
 
@@ -203,39 +205,38 @@ namespace AR_Inventory
                     //_model.Draw(Matrix.T(focusedItemBounds.center), new Color(1, 0, 0));
                 }
 
-                bool stillTouchingFocusedItem = anyFingerTipTouching(focusedItemBounds, lHand, rHand);
+                bool stillTouchingFocusedItem = AnyFingerTipTouching(focusedItemBounds, lHand, rHand);
 
                 if (!stillTouchingFocusedItem)
                 {
-                    var touchedItem = firstItemTouchedByFinger(App.ItemService.Items, lHand, rHand);
+                    var touchedItem = FirstItemTouchedByFinger(App.ItemService.Items, lHand, rHand);
                     if (touchedItem != null && touchedItem != App.ItemService.FocusedItem)
                     {
-                        // Touching a different item this frame. Make it the new focused item and make a sound
+                        // Touching a different item this frame. Make it the new focused item and make a sound.
                         App.ItemService.FocusedItem = touchedItem;
                         Sound.Click.Play(center);
                     }
                 }
             }
-
         }
 
         public void AddItem()
         {
-            createNewItem();
+            CreateNewItem();
 		}
 
-        private ItemDto firstItemTouchedByFinger(List<ItemDto> items, Hand leftHand, Hand rightHand)
+        private ItemDto FirstItemTouchedByFinger(List<ItemDto> items, Hand leftHand, Hand rightHand)
         {
             foreach (var item in items)
             {
                 var center = item.Pose.position;
 
 				// Try to get spatial anchor for the item
-				Anchor anchor = App.ItemService.TryGetSpatialAnchor(item);
+				Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
 
 				// Adjust to anchor space if available
 				if (anchor != null)
-                    center = anchor.Pose.ToMatrix() * center;
+                    center = anchor.Value.Pose.ToMatrix() * center;
 
 				Bounds itemBounds = new Bounds(center, _model.Bounds.dimensions);
 
@@ -245,7 +246,7 @@ namespace AR_Inventory
 				    //_model.Draw(Matrix.T(itemBounds.center), new Color(0, 1, 0));
                 }
 
-				if (anyFingerTipTouching(itemBounds, leftHand, rightHand))
+				if (AnyFingerTipTouching(itemBounds, leftHand, rightHand))
                 {
                     return item;
                 }
@@ -261,7 +262,7 @@ namespace AR_Inventory
         /// <param name="rightHand"></param>
         /// <param name="leftHand"></param>
         /// <returns></returns>
-        private bool anyFingerTipTouching(Bounds bounds, Hand leftHand, Hand rightHand)
+        private bool AnyFingerTipTouching(Bounds bounds, Hand leftHand, Hand rightHand)
         {
             // Only consider tracked hands. Untracked hands can still have a position, even if not visible!
             if (rightHand.IsTracked)
@@ -292,7 +293,7 @@ namespace AR_Inventory
         // Give a unique index to new items, for readability 
         private int _newItemCounter = 1;
 
-        private void createNewItem()
+        private void CreateNewItem()
         {
             // This new item will appear directly in front of user's head
             var newItemPosition = Input.Head.position + Input.Head.Forward * 0.5f;

@@ -1,9 +1,9 @@
-﻿using SpatialEntity;
+﻿using StereoKitFBSpatialEntity;
 using StereoKit;
 using StereoKit.Framework;
 using System;
 using System.Linq;
-using static SpatialEntity.SpatialEntityFBExt;
+using static StereoKitFBSpatialEntity.SpatialEntityFBExt;
 
 namespace AR_Inventory
 {
@@ -56,10 +56,10 @@ namespace AR_Inventory
             {
                 // Draw a path from the user's hand to the item, one dimension at a time
                 Matrix itemPoseMatrix = App.ItemService.SearchedItem.Pose.ToMatrix();
-                Anchor anchor         = App.ItemService.TryGetSpatialAnchor(App.ItemService.SearchedItem);
+                Anchor? anchor        = App.ItemService.TryGetSpatialAnchor(App.ItemService.SearchedItem);
 
                 if (anchor != null)
-                    itemPoseMatrix = itemPoseMatrix * anchor.Pose.ToMatrix();
+                    itemPoseMatrix = itemPoseMatrix * anchor.Value.Pose.ToMatrix();
 
                 Vec3 p0 = Input.Hand(Handed.Right).wrist.position;
 				Vec3 p1 = new Vec3(p0.x, p0.y, itemPoseMatrix.Translation.z);

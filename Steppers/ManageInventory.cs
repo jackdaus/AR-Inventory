@@ -75,7 +75,7 @@ namespace AR_Inventory.Steppers
             foreach (ItemDto item in App.ItemService.Items.ToList())
             {
                 // Try to get spatial anchor for the item
-                Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
+                StereoKitFBSpatialEntity.SpatialEntityFBExt.Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
 
                 // If spatial anchors are present and loaded, we will use the anchor as a root for the item.
                 // Otherwise, we will "gracefully" fall back to just the item's local pose relative to the
@@ -189,7 +189,7 @@ namespace AR_Inventory.Steppers
                 var center = App.ItemService.FocusedItem.Pose.position;
 
                 // Try to get spatial anchor for the item
-                Anchor? anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.FocusedItem);
+                StereoKitFBSpatialEntity.SpatialEntityFBExt.Anchor? anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.FocusedItem);
 
                 // Adjust to anchor space if available
                 if (anchor != null)
@@ -230,7 +230,7 @@ namespace AR_Inventory.Steppers
                 var center = item.Pose.position;
 
                 // Try to get spatial anchor for the item
-                Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
+                StereoKitFBSpatialEntity.SpatialEntityFBExt.Anchor? anchor = App.ItemService.TryGetSpatialAnchor(item);
 
                 // Adjust to anchor space if available
                 if (anchor != null)

@@ -55,8 +55,8 @@ namespace AR_Inventory.Steppers
             {
                 // Draw a path from the user's hand to the item, one dimension at a time
                 Matrix itemPoseMatrix = App.ItemService.SearchedItem.Pose.ToMatrix();
-                Anchor? anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.SearchedItem);
-
+                StereoKitFBSpatialEntity.SpatialEntityFBExt.Anchor? anchor = App.ItemService.TryGetSpatialAnchor(App.ItemService.SearchedItem);
+                
                 if (anchor != null)
                     itemPoseMatrix = itemPoseMatrix * anchor.Value.Pose.ToMatrix();
 

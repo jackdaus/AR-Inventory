@@ -22,7 +22,7 @@ public static class App
     {
         // OpenXR Extensions. These must be created BEFORE SK.Init is called
         Passthrough   = SK.AddStepper<PassthroughFBExt>();
-        SpatialEntity = SK.AddStepper(new SpatialEntityFBExt(loadAnchorsOnInit: false));
+        SpatialEntity = SK.AddStepper(new SpatialEntityFBExt(loadAnchorsOnInit: true));
     }
 
     /// <summary>

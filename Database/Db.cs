@@ -17,7 +17,7 @@ namespace AR_Inventory
             DbPath     = System.IO.Path.Join(path, "inventory.db");
         }
 
-        // The following configures EF to create a SQLite db
+        // The following configures EF to connect to the a SQLite db
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite($"Data Source={DbPath}");
     }

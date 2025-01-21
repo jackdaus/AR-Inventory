@@ -1,6 +1,7 @@
 using StereoKitFBSpatialEntity;
 using StereoKit;
 using AR_Inventory.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace AR_Inventory;
 
@@ -30,7 +31,20 @@ public static class App
     /// </summary>
     public static void PostSKInit()
     {
-        Db     = new Db();
+        // Initialize the database
+        Db = new Db();
+
+        // Ensure that the database is created and apply any pending migrations
+        // TODO confirm this works on all platforms. 
+        Db.Database.Migrate();
+
+        // Load all anchors from the Meta system
+        //SpatialEntity.LoadAllAnchors();
+
+        // Initialize the ItemService
+        // TODO consider injecting the dependencies, so it's clear what the dependencies are
         ItemService = new ItemService();
+
+
     }
 }

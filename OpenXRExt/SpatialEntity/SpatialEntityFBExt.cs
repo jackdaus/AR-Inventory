@@ -56,11 +56,15 @@ namespace StereoKitFBSpatialEntity
 				&& Backend.OpenXR.ExtEnabled("XR_FB_spatial_entity_query")
 				&& LoadBindings();
 
-			// Set up xrPollEvent subscription
-			if (_extAvailable)
+            // If the extension is not available, then report initialization failure.
+            if (!_extAvailable)
 			{
-				Backend.OpenXR.OnPollEvent += PollEventHandler;
+				Log.Warn("SpatialEntityFBExt is not available! SpatialEntityFBExt stepper will not be enabled.");
+                return false;
 			}
+
+			// Set up xrPollEvent subscription
+			Backend.OpenXR.OnPollEvent += PollEventHandler;
 
 			// Enable on initialization
 			_enabled = true;
